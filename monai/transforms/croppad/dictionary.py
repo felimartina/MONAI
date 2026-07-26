@@ -617,14 +617,14 @@ class CenterSpatialCropd(Cropd):
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
         roi_size: deprecated alias for ``spatial_size``.
 
-    .. deprecated:: 1.7
-        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.9.
+    .. deprecated:: 1.6
+        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.8.
     """
 
     @deprecated_arg(
         name="roi_size",
-        since="1.7",
-        removed="1.9",
+        since="1.6",
+        removed="1.8",
         new_name="spatial_size",
         msg_suffix="please use `spatial_size` instead.",
     )
@@ -704,14 +704,14 @@ class RandSpatialCropd(RandCropd):
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
         roi_size: deprecated alias for ``spatial_size``.
 
-    .. deprecated:: 1.7
-        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.9.
+    .. deprecated:: 1.6
+        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.8.
     """
 
     @deprecated_arg(
         name="roi_size",
-        since="1.7",
-        removed="1.9",
+        since="1.6",
+        removed="1.8",
         new_name="spatial_size",
         msg_suffix="please use `spatial_size` instead.",
     )
@@ -819,8 +819,8 @@ class RandSpatialCropSamplesd(Randomizable, MapTransform, LazyTransform, MultiSa
     Raises:
         ValueError: When ``num_samples`` is nonpositive.
 
-    .. deprecated:: 1.7
-        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.9.
+    .. deprecated:: 1.6
+        The ``roi_size`` parameter is deprecated in favor of ``spatial_size`` and will be removed in 1.8.
 
     """
 
@@ -828,8 +828,8 @@ class RandSpatialCropSamplesd(Randomizable, MapTransform, LazyTransform, MultiSa
 
     @deprecated_arg(
         name="roi_size",
-        since="1.7",
-        removed="1.9",
+        since="1.6",
+        removed="1.8",
         new_name="spatial_size",
         msg_suffix="please use `spatial_size` instead.",
     )
