@@ -188,6 +188,19 @@ class TestRegRes(unittest.TestCase):
             with self.assertRaisesRegex(OptionalImportError, r"^No ImageWriter backend found for unknown\.$"):
                 resolve_writer("unknown")
 
+    def test_missing_writer_hint_from_require_pkg(self):
+        from monai.utils import require_pkg
+
+        @require_pkg(pkg_name="not_a_real_image_writer_pkg")
+        class MissingPkgWriter:
+            pass
+
+        with patch.dict(SUPPORTED_WRITERS, {"xyz": (MissingPkgWriter,)}, clear=True):
+            with self.assertRaisesRegex(
+                OptionalImportError, r"Install `not_a_real_image_writer_pkg` with `pip install not_a_real_image_writer_pkg`"
+            ):
+                resolve_writer("xyz")
+
 
 @unittest.skipUnless(has_itk, "itk not installed")
 class TestLoadSaveNrrd(unittest.TestCase):
