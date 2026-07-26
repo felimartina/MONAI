@@ -289,6 +289,16 @@ class TestDeprecated(unittest.TestCase):
             warnings.simplefilter("error", FutureWarning)
             self.assertEqual(afoo4(1, b=2), {"b": 2})
 
+    def test_replacement_arg_release_version(self):
+        """Test replacement warns at an exact three-component release version."""
+
+        @deprecated_arg("b", new_name="a", since="1.7.0", removed="1.9.0", version_val="1.7.0")
+        def afoo4(a, b=None):
+            return a
+
+        with self.assertWarnsRegex(FutureWarning, "1.7.0"):
+            self.assertEqual(afoo4(b=2), 2)
+
     def test_replacement_arg1(self):
         """
         Test deprecated arg being replaced with kwargs.
