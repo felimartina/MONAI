@@ -18,17 +18,18 @@ from parameterized import parameterized
 
 from monai.transforms import CenterSpatialCrop
 from tests.croppers import CropTest
+from tests.test_utils import assert_allclose
 
 TEST_SHAPES = [
-    [{"roi_size": [2, 2, -1]}, (3, 3, 3, 3), (3, 2, 2, 3), True],
-    [{"roi_size": [2, 2, 2]}, (3, 3, 3, 3), (3, 2, 2, 2), True],
-    [{"roi_size": [2, 1, 2]}, (3, 3, 3, 3), (3, 2, 1, 2), False],
-    [{"roi_size": [2, 1, 3]}, (3, 3, 1, 3), (3, 2, 1, 3), True],
+    [{"spatial_size": [2, 2, -1]}, (3, 3, 3, 3), (3, 2, 2, 3), True],
+    [{"spatial_size": [2, 2, 2]}, (3, 3, 3, 3), (3, 2, 2, 2), True],
+    [{"spatial_size": [2, 1, 2]}, (3, 3, 3, 3), (3, 2, 1, 2), False],
+    [{"spatial_size": [2, 1, 3]}, (3, 3, 1, 3), (3, 2, 1, 3), True],
 ]
 
 TEST_VALUES = [
     [
-        {"roi_size": [2, 2]},
+        {"spatial_size": [2, 2]},
         np.array([[[0, 0, 0, 0, 0], [0, 1, 2, 1, 0], [0, 2, 3, 2, 0], [0, 1, 2, 1, 0], [0, 0, 0, 0, 0]]]),
         np.array([[[1, 2], [2, 3]]]),
     ]
@@ -49,6 +50,17 @@ class TestCenterSpatialCrop(CropTest):
     @parameterized.expand(TEST_SHAPES)
     def test_pending_ops(self, input_param, input_shape, _, align_corners):
         self.crop_test_pending_ops(input_param, input_shape, align_corners)
+
+    def test_deprecated_roi_size(self):
+        data = np.arange(25).reshape((1, 5, 5))
+        expected = CenterSpatialCrop((2, 2))(data)
+        with self.assertWarnsRegex(FutureWarning, "spatial_size"):
+            result = CenterSpatialCrop(roi_size=(2, 2))(data)
+        assert_allclose(result, expected)
+
+        with self.assertWarnsRegex(FutureWarning, "spatial_size"):
+            result = CenterSpatialCrop(spatial_size=(3, 3), roi_size=(2, 2))(data)
+        self.assertTupleEqual(result.shape, (1, 3, 3))
 
 
 if __name__ == "__main__":
