@@ -164,6 +164,9 @@ def deprecated_arg(
     if since is not None and removed is not None and not version_leq(since, removed):
         raise ValueError(f"since must be less or equal to removed, got since={since}, removed={removed}.")
     is_not_yet_deprecated = since is not None and version_val != since and version_leq(version_val, since)
+    if is_not_yet_deprecated and new_name is None:
+        # smaller than `since`, do nothing unless the argument needs to be renamed
+        return lambda obj: obj
     if since is None and removed is None:
         # raise a DeprecatedError directly
         is_removed = True

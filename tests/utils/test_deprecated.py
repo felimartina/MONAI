@@ -278,6 +278,17 @@ class TestDeprecated(unittest.TestCase):
             self.assertEqual(afoo4(b=2), 2)
             self.assertEqual(afoo4(a=1, b=2), 1)
 
+    def test_future_arg_with_kwargs(self):
+        """Test a future deprecated arg without a replacement remains unchanged."""
+
+        @deprecated_arg("b", since=self.next_version, version_val=self.test_version)
+        def afoo4(a, **kwargs):
+            return kwargs
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            self.assertEqual(afoo4(1, b=2), {"b": 2})
+
     def test_replacement_arg1(self):
         """
         Test deprecated arg being replaced with kwargs.
