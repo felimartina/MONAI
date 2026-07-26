@@ -311,6 +311,10 @@ class InvalidPyTorchVersionError(Exception):
 class OptionalImportError(ImportError):
     """
     Could not import APIs from an optional dependency.
+
+    When raised from ``require_pkg``, the ``name`` attribute (inherited from
+    ``ImportError``) is set to the missing package's import name so callers can
+    construct installation hints.
     """
 
 
@@ -476,7 +480,7 @@ def require_pkg(
             if not has:
                 err_msg = f"required package `{pkg_name}` is not installed or the version doesn't match requirement."
                 if raise_error:
-                    raise OptionalImportError(err_msg)
+                    raise OptionalImportError(err_msg, name=pkg_name)
                 else:
                     warnings.warn(err_msg)
 
