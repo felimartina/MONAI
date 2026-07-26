@@ -1,7 +1,7 @@
 ---
 name: implement-change
 description: >-
-  Golden path for making a change to MONAI: clarify the request, explore the
+  Golden path for making a change to MONAI: confirm the task, explore the
   codebase, plan, open a draft pull request, implement with tests, verify, and
   update the PR. Use for implementing a MONAI fix or feature, a first
   contribution to this repository, a change described by a GitHub issue, or any
@@ -22,33 +22,52 @@ gh issue view <number> --repo Project-MONAI/MONAI --comments
 
 The thread is part of the request. Maintainer replies frequently narrow the scope, and sometimes dispute the premise.
 
-## Phase 0 — Clarify (blocking)
+## Phase 0 — Confirm the task
 
-Ask **3 to 7** questions, then **stop and wait**. Do not explore, do not edit.
+Do not open with a questionnaire. Read what you already have first: the request, the linked issue and its comments, and the code the issue names. Most of what a question would ask is already written down somewhere you have access to.
 
-Ask only what changes the work. If the answer is already in the request or the linked issue, do not ask it — restate your reading of it and ask the person to confirm.
+Then take the cheapest honest path.
 
-Cover:
+**When the task is clear** — you can state the outcome, the scope, and the kind of change from the material in front of you — do not ask anything. Post a short reading and one request for confirmation:
 
-1. **Kind of change**: bugfix, enhancement, or docs? (Infer when obvious; a reported failure with a repro is a bugfix.)
-2. **Outcome**: what should be true afterwards, in user-visible or API terms?
-3. **Scope**: what is explicitly out of scope for this PR?
-4. **Area**: which `monai/` module, if known?
-5. **Success criteria**: tests, docs, backwards compatible or a declared break?
-6. **Must not change**: any behavior, signature, or default that has to stay?
-7. **Issue**: is there a GitHub issue to link? Paste the number or URL.
+```
+Kind: bugfix
+Outcome: <what is true afterwards, in API or user-visible terms>
+Area: <module or file, if the material names it>
+Compatibility: <non-breaking | opt-in | declared break>
+Out of scope: <what you will not touch>
 
-Do not pad the list to seven. Ask, stop, wait.
+Correct me, or say go.
+```
+
+One message, one yes. Do not also ask a list of questions.
+
+**When something genuinely blocks you**, ask at most **3** questions and stop. A question earns its place only if all three of these hold:
+
+- the answer changes what you build, not just how you describe it
+- you cannot get it from the issue, the code, or `git log`
+- it is a decision only a human can make — intended behavior, tolerable breakage, scope boundary, priority
+
+**Never ask:**
+
+- what the code can tell you: which module, which test file, what the current behavior is. Read it, or let the explorer find it in Phase 1.
+- open-ended framing questions when the issue already answers them. "What outcome do you want?" against a bug report with a repro is noise.
+- anything stated in the request you were just handed.
+- two questions about the same decision.
+
+**If the person does not know, that is an answer.** Do not re-ask and do not stall. Name the assumption you are proceeding on, say why it is the safer default, and carry it into the PR description as an open question for the maintainer. A stated assumption a reviewer can correct beats a blocked task nobody in the room can unblock.
+
+Questions that only become concrete after reading the code belong in Phase 2.
 
 ## Phase 1 — Explore
 
-Launch the **`monai-explorer`** subagent with the request plus the Phase 0 answers. It is read-only and returns a one-page brief: target files, the pattern to follow, the test file to extend, exports and docs to touch, ownership risk, and open questions.
+Launch the **`monai-explorer`** subagent with the request plus whatever Phase 0 settled. It is read-only and returns a one-page brief: target files, the pattern to follow, the test file to extend, exports and docs to touch, ownership risk, and open questions.
 
 Read the brief before planning. If it names a canonical implementation, follow it rather than inventing a parallel approach.
 
 ## Phase 2 — Re-clarify (only if needed)
 
-Ask **1 or 2** more questions, and only if the explorer surfaced something that changes the approach:
+This is where a real question usually belongs, because now it is concrete and you can show the evidence behind it. Ask **1 or 2**, and only if the explorer surfaced something that changes the approach:
 
 - the functionality already exists in MONAI
 - the bug is at a different layer than assumed
@@ -80,7 +99,7 @@ Keep it to something a reviewer could read in a minute. **Do not write the plan 
 
 `CONTRIBUTING.md` asks for pull requests early, as drafts. Open it now, before implementing, so the plan is visible while the work happens.
 
-1. Create the branch from `dev`, named `[ticket_id]-[task_name]` — e.g. `7980-writer-install-hint`.
+1. Create the branch from **`cursor-onboarding`**, named `[ticket_id]-[task_name]` — e.g. `7980-writer-install-hint`. That is the integration branch in this repository. Branching from `dev` would put your work on a tree without this onboarding layer, so none of the rules, hooks, or skills would apply while you edit.
 2. **Read `.github/pull_request_template.md`** and use it as the body's structure. It is the only PR template; never duplicate it under `.cursor/`.
 3. Fill it from the plan:
    - `Fixes # .` → the issue number, or `N/A` plus one line on where the request came from
@@ -96,7 +115,13 @@ Keep it to something a reviewer could read in a minute. **Do not write the plan 
 - Bugbot: pending | clean | link
 ```
 
-Open it as a draft: `gh pr create --draft --base dev --title "..." --body "..."`.
+Open it as a draft against the branch you started from:
+
+```bash
+gh pr create --draft --base cursor-onboarding --title "..." --body "..."
+```
+
+Targeting `dev` instead would show this entire onboarding layer as part of your change. Contributing the same fix upstream to `Project-MONAI/MONAI` does target `dev`, and that is a separate step a human takes deliberately.
 
 Do not add report-card matrices, self-assessment tables, or process narration. Reviewers want the change and the evidence.
 
@@ -133,6 +158,7 @@ Fix everything in **Critical**. Address should-fix items or say why not, and re-
 - Update the **Types of changes** boxes so they are true now, including the breaking-change box.
 - Fill **Verification** with the real commands and their key output, the verifier's summary, and Bugbot status.
 - For a bugfix, include the before-and-after evidence from Phase 2b.
+- Record any assumption you carried forward from Phase 0 as an open question for the reviewer.
 
 ## Phase 9 — Push and hand off
 

@@ -48,7 +48,7 @@ python -m tests.apps.detection.test_box_transform  # one test module (dotted pat
 git commit -s -m "message"                         # DCO sign-off is mandatory
 ```
 
-Branches for a tracked issue are named `[ticket_id]-[task_name]`. Pull requests target `dev` and open as drafts early.
+Branches for a tracked issue are named `[ticket_id]-[task_name]` and are cut from `cursor-onboarding`, the integration branch in this repository. Pull requests open as drafts early and target `cursor-onboarding`; a change contributed upstream to `Project-MONAI/MONAI` targets `dev` instead.
 
 ## Policy
 
