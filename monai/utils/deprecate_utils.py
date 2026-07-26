@@ -136,6 +136,7 @@ def deprecated_arg(
     a `warning_category` is issued if `since` is given and the current version is at or later than that given.
     a `DeprecatedError` exception is instead raised if `removed` is given and the current version is at or later
     than that, or if neither `since` nor `removed` is provided.
+    If `new_name` is specified, the deprecated argument is replaced even before `since`, without issuing a warning.
 
     The relevant docstring of the deprecating function should also be updated accordingly,
     using the Sphinx directives such as `.. versionchanged:: version` and `.. deprecated:: version`.
@@ -163,16 +164,13 @@ def deprecated_arg(
     if since is not None and removed is not None and not version_leq(since, removed):
         raise ValueError(f"since must be less or equal to removed, got since={since}, removed={removed}.")
     is_not_yet_deprecated = since is not None and version_val != since and version_leq(version_val, since)
-    if is_not_yet_deprecated:
-        # smaller than `since`, do nothing
-        return lambda obj: obj
     if since is None and removed is None:
         # raise a DeprecatedError directly
         is_removed = True
         is_deprecated = True
     else:
         # compare the numbers
-        is_deprecated = since is not None and version_leq(since, version_val)
+        is_deprecated = not is_not_yet_deprecated and since is not None and version_leq(since, version_val)
         is_removed = removed is not None and version_val != f"{sys.maxsize}" and version_leq(removed, version_val)
 
     def _decorator(func):
