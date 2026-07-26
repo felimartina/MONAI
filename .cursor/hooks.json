@@ -1,0 +1,23 @@
+{
+    "version": 1,
+    "hooks": {
+        "afterFileEdit": [
+            {
+                "command": ".cursor/hooks/require-license-header.sh",
+                "timeout": 10
+            },
+            {
+                "command": ".cursor/hooks/post-edit-lint.sh",
+                "timeout": 30
+            }
+        ],
+        "preToolUse": [
+            {
+                "command": "python3 .cursor/hooks/protect-platform-paths.py",
+                "matcher": "Write|StrReplace|Edit|MultiEdit|Delete|EditNotebook",
+                "failClosed": true,
+                "timeout": 10
+            }
+        ]
+    }
+}

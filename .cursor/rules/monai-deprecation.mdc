@@ -1,0 +1,14 @@
+---
+description: Backwards compatibility and deprecation utilities for MONAI APIs
+globs: monai/**/*.py
+alwaysApply: false
+---
+
+# Deprecation and backwards compatibility
+
+Canonical: `CONTRIBUTING.md` → "Backwards compatibility". Changing a public API in place is a break; a warned migration path is not.
+
+- Use `deprecated`, `deprecated_arg`, or `deprecated_arg_default` from `monai.utils`, with `since=`, `removed=` where the removal is decided, and a `msg_suffix` naming the replacement. Examples: `monai/losses/cldice.py`, `monai/transforms/spatial/array.py`.
+- Never silently change a default, signature, or return shape — route it through `deprecated_arg_default`.
+- Test **both** paths, including that the warning is raised (`assertWarns`).
+- If behavior visibly changes, check "Breaking change" in the PR template, not "Non-breaking change".

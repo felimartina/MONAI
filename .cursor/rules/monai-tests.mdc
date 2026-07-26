@@ -1,0 +1,17 @@
+---
+description: MONAI unit test conventions - naming, location, dependencies, test data
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Unit tests
+
+Canonical: `CONTRIBUTING.md` → "Unit testing". What gets forgotten mid-edit:
+
+- **Extend, don't duplicate.** Mirror the source layout and add cases to the module's existing `test_[module_name].py`. `tests/apps/detection/test_box_transform.py` is the pattern to copy.
+- **Cover the new branches**, not just the happy path: `assertRaises` on validation, dtype and backend variants via `TEST_NDARRAYS`, degenerate inputs. Case tables use `parameterized`.
+- **No binary fixtures.** Remote data goes through `tests/testing_data/data_config.json` with `testing_data_config` / `download_url_or_skip_test`.
+- **A new test dependency** means both `requirements-dev.txt` and `exclude_cases` in `tests/min_tests.py` — both need human approval.
+- Never weaken an assertion to make a test green, and never report a pass you did not run.
+
+Import helpers from `tests.test_utils`; `CONTRIBUTING.md` still calls it `tests.utils`, which is stale.
