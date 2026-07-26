@@ -157,9 +157,9 @@ TESTS.append(("DivisiblePadd 2d", "2D", 0, True, DivisiblePadd(KEYS, k=4)))
 
 TESTS.append(("DivisiblePadd 3d", "3D", 0, True, DivisiblePadd(KEYS, k=[4, 8, 11])))
 
-TESTS.append(("CenterSpatialCropd 2d", "2D", 0, True, CenterSpatialCropd(KEYS, roi_size=95)))
+TESTS.append(("CenterSpatialCropd 2d", "2D", 0, True, CenterSpatialCropd(KEYS, spatial_size=95)))
 
-TESTS.append(("CenterSpatialCropd 3d", "3D", 0, True, CenterSpatialCropd(KEYS, roi_size=[95, 97, 98])))
+TESTS.append(("CenterSpatialCropd 3d", "3D", 0, True, CenterSpatialCropd(KEYS, spatial_size=[95, 97, 98])))
 
 TESTS.append(("CropForegroundd 2d", "2D", 0, True, CropForegroundd(KEYS, source_key="label", margin=2)))
 
