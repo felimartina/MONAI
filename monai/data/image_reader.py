@@ -374,6 +374,11 @@ class ITKReader(ImageReader):
         e.g. for an RGB image, all red channel image pixels are contiguous in memory.
         The last axis of the returned array is the channel axis.
 
+        When ``reverse_indexing`` is ``True``, the returned array is an owned C-contiguous
+        copy so it does not share memory with the ITK image object. When ``False``, the
+        returned array may be a non-contiguous view/transpose that is materialized by later
+        conversion to a contiguous tensor.
+
         See also:
 
             - https://github.com/InsightSoftwareConsortium/ITK/blob/v5.2.1/Modules/Bridge/NumPy/wrapping/PyBuffer.i.in
@@ -384,9 +389,13 @@ class ITKReader(ImageReader):
         """
         np_img = itk.array_view_from_image(img, keep_axes=False)
         if img.GetNumberOfComponentsPerPixel() == 1:  # handling spatial images
-            return np_img if self.reverse_indexing else np_img.T
+            # reverse_indexing=True keeps a C-contiguous view into ITK memory. Without a copy,
+            # convert_to_tensor's ascontiguousarray is a no-op and torch may share that buffer;
+            # after the ITK image is freed this can segfault (e.g. some NRRD loads, #7372).
+            # The default False path returns a non-contiguous transpose that is materialized later.
+            return np.array(np_img, copy=True, order="C") if self.reverse_indexing else np_img.T
         # handling multi-channel images
-        return np_img if self.reverse_indexing else np.moveaxis(np_img.T, 0, -1)
+        return np.array(np_img, copy=True, order="C") if self.reverse_indexing else np.moveaxis(np_img.T, 0, -1)
 
 
 @require_pkg(pkg_name="pydicom")
