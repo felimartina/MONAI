@@ -119,12 +119,17 @@ def remote_repo(cwd: str, name: str) -> str | None:
     return normalize_repo(url)
 
 
-def extract_gh_segments(command: str) -> list[list[str]]:
-    """Pull out argv lists for bare `gh ...` invocations inside a shell line."""
+def extract_gh_segments(command: str) -> list[list[str]] | None:
+    """Pull out argv lists for bare `gh ...` invocations inside a shell line.
+
+    Returns None when the line cannot be tokenized (fail closed in main).
+    Returns an empty list when the line parses but contains no `gh` command —
+    e.g. a commit message or grep pattern that only mentions the words.
+    """
     try:
         tokens = shlex.split(command, posix=True)
     except ValueError:
-        return []
+        return None
 
     segments: list[list[str]] = []
     i = 0
@@ -312,7 +317,8 @@ def main() -> None:
         allow()
 
     segments = extract_gh_segments(command)
-    if not segments:
+    if segments is None:
+        # shlex could not tokenize — fail closed when the line still looks like a create.
         if command_mentions_upstream_repo(command):
             deny(
                 "Blocked: shell line looks like `gh pr create` targeting Project-MONAI/MONAI.",
@@ -323,6 +329,9 @@ def main() -> None:
             "Re-run with a simple command and explicit `--repo <fork>`.",
             "Denied unparseable gh pr create (fail-closed).",
         )
+    if not segments:
+        # Parsed cleanly but no bare `gh` invocation — mention-only (commit/grep/echo).
+        allow()
 
     for seg in segments:
         decision = decide_for_segment(seg, cwd)
