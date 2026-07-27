@@ -389,10 +389,10 @@ class ITKReader(ImageReader):
         """
         np_img = itk.array_view_from_image(img, keep_axes=False)
         if img.GetNumberOfComponentsPerPixel() == 1:  # handling spatial images
-            # reverse_indexing=True keeps a C-contiguous view into ITK memory. Without a copy,
-            # convert_to_tensor's ascontiguousarray is a no-op and torch may share that buffer;
-            # after the ITK image is freed this can segfault (e.g. some NRRD loads, #7372).
-            # The default False path returns a non-contiguous transpose that is materialized later.
+            # Without a copy, reverse_indexing=True would return a C-contiguous view into ITK
+            # memory; convert_to_tensor's ascontiguousarray is then a no-op and torch may share
+            # that buffer. After the ITK image is freed this can segfault (e.g. some NRRD loads,
+            # #7372). The default False path returns a non-contiguous transpose materialized later.
             return np.array(np_img, copy=True, order="C") if self.reverse_indexing else np_img.T
         # handling multi-channel images
         return np.array(np_img, copy=True, order="C") if self.reverse_indexing else np.moveaxis(np_img.T, 0, -1)
