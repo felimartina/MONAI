@@ -374,6 +374,11 @@ class ITKReader(ImageReader):
         e.g. for an RGB image, all red channel image pixels are contiguous in memory.
         The last axis of the returned array is the channel axis.
 
+        When ``reverse_indexing`` is ``True``, the returned array is an owned C-contiguous
+        copy so it does not share memory with the ITK image object. When ``False``, the
+        returned array may be a non-contiguous view/transpose that is materialized by later
+        conversion to a contiguous tensor.
+
         See also:
 
             - https://github.com/InsightSoftwareConsortium/ITK/blob/v5.2.1/Modules/Bridge/NumPy/wrapping/PyBuffer.i.in
