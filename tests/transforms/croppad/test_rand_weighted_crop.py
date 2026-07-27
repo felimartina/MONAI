@@ -43,7 +43,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "small roi 2d",
-                dict(spatial_size=(10, 12), num_samples=3),
+                dict(roi_size=(10, 12), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 10, 12),
@@ -54,7 +54,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "default roi 2d",
-                dict(spatial_size=(10, -1), num_samples=3),
+                dict(roi_size=(10, -1), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 10, 64),
@@ -68,7 +68,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "large roi 2d",
-                dict(spatial_size=(10000, 400), num_samples=3),
+                dict(roi_size=(10000, 400), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 128, 64),
@@ -83,7 +83,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "bad w 2d",
-                dict(spatial_size=(20, 40), num_samples=3),
+                dict(roi_size=(20, 40), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 20, 40),
@@ -98,7 +98,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "int w 2d",
-                dict(spatial_size=(10, 12), num_samples=3),
+                dict(roi_size=(10, 12), num_samples=3),
                 p(im),
                 q(weight_map),
                 (1, 10, 12),
@@ -113,7 +113,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "small roi 3d",
-                dict(spatial_size=(8, 10, 12), num_samples=3),
+                dict(roi_size=(8, 10, 12), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 8, 10, 12),
@@ -128,7 +128,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "default roi 3d",
-                dict(spatial_size=(10, -1, -1), num_samples=3),
+                dict(roi_size=(10, -1, -1), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 10, 48, 80),
@@ -142,7 +142,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "large roi 3d",
-                dict(spatial_size=(10000, 400, 80), num_samples=3),
+                dict(roi_size=(10000, 400, 80), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 64, 48, 80),
@@ -157,7 +157,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "bad w 3d",
-                dict(spatial_size=(64, 48, 80), num_samples=3),
+                dict(roi_size=(64, 48, 80), num_samples=3),
                 p(im),
                 q(weight),
                 (1, 64, 48, 80),
@@ -172,7 +172,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "int w 3d",
-                dict(spatial_size=(8, 10, 12), num_samples=3),
+                dict(roi_size=(8, 10, 12), num_samples=3),
                 p(im),
                 q(weight_map),
                 (1, 8, 10, 12),
@@ -194,7 +194,7 @@ class TestRandWeightedCrop(CropTest):
         for c, e in zip(crop.centers, expected_vals):
             assert_allclose(c, e, type_test=False)
         # if desired ROI is larger than image, check image is unchanged
-        if all(s >= i for i, s in zip(img.shape[1:], input_params["spatial_size"])):
+        if all(s >= i for i, s in zip(img.shape[1:], input_params["roi_size"])):
             for res in result:
                 assert_allclose(res, img, type_test="tensor")
                 self.assertEqual(len(res.applied_operations), 1)
