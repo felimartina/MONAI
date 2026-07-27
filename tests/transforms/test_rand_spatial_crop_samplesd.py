@@ -22,7 +22,13 @@ from monai.transforms.lazy.functional import apply_pending
 from tests.test_utils import TEST_NDARRAYS_ALL, assert_allclose
 
 TEST_CASE_1 = [
-    {"keys": ["img", "seg"], "num_samples": 4, "roi_size": [2, 2, 2], "random_center": True, "random_size": True},
+    {
+        "keys": ["img", "seg"],
+        "num_samples": 4,
+        "spatial_size": [2, 2, 2],
+        "random_center": True,
+        "random_size": True,
+    },
     {"img": np.arange(81).reshape(3, 3, 3, 3), "seg": np.arange(81, 0, -1).reshape(3, 3, 3, 3)},
     [(3, 2, 2, 2), (3, 2, 3, 3), (3, 2, 3, 2), (3, 2, 3, 2)],
     {
@@ -50,7 +56,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "keys": ["img", "seg"],
                 "num_samples": 8,
-                "roi_size": [2, 2, 3],
+                "spatial_size": [2, 2, 3],
                 "random_center": False,
                 "random_size": True,
             },
@@ -110,7 +116,7 @@ class TestRandSpatialCropSamplesd(unittest.TestCase):
         data = {"img": np.ones((1, 10, 11, 12))}
         num_samples = 3
         sampler = RandSpatialCropSamplesd(
-            keys=["img"], roi_size=(3, 3, 3), num_samples=num_samples, random_center=True, random_size=False
+            keys=["img"], spatial_size=(3, 3, 3), num_samples=num_samples, random_center=True, random_size=False
         )
         transform = Compose([DivisiblePadd(keys="img", k=5), sampler])
         samples = transform(data)
@@ -141,6 +147,18 @@ class TestRandSpatialCropSamplesd(unittest.TestCase):
             # compare
             assert_allclose(result_img, expected[i]["img"], rtol=1e-5)
             assert_allclose(result_seg, expected[i]["seg"], rtol=1e-5)
+
+    def test_deprecated_roi_size(self):
+        data = {"img": np.arange(25).reshape((1, 5, 5))}
+        expected_transform = RandSpatialCropSamplesd("img", (2, 2), 2)
+        with self.assertWarnsRegex(FutureWarning, "spatial_size"):
+            result_transform = RandSpatialCropSamplesd(keys="img", roi_size=(2, 2), num_samples=2)
+        expected_transform.set_random_state(1234)
+        result_transform.set_random_state(1234)
+        expected = expected_transform(data)
+        result = result_transform(data)
+        for result_item, expected_item in zip(result, expected):
+            assert_allclose(result_item["img"], expected_item["img"])
 
 
 if __name__ == "__main__":

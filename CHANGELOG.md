@@ -4,6 +4,9 @@ All notable changes to MONAI are documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+* Standardize crop size kwargs to `spatial_size` / `max_spatial_size` for `CenterSpatialCrop`, `RandSpatialCrop`, and `RandSpatialCropSamples` (and dict wrappers); `roi_size` / `max_roi_size` remain as deprecated aliases until 1.9.0 (#8432).
+
 ### Added
 * `HyenaMixer`, `HyenaTransformerBlock`, and `DepthwiseFFTConv{2,3}d` in `monai.networks.blocks`: subquadratic O(N log N) alternatives to windowed self-attention, backed by the HyenaND operator from the optional `nvsubquadratic` package.
 * `HyenaNDUNETR` (`monai.networks.nets.HyenaNDUNETR`): thin `SwinUNETR` subclass with a `get_variant(name)` classmethod for the three Hyena variants (`HHHH`, `HAHA`, `HHAA`) from the NeurIPS 2026 paper "Native Multi-Dimensional Subquadratic Operators via Input Dependent Long Convolutions" (paper id 26539).
