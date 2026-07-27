@@ -335,6 +335,28 @@ class TestLoadImage(unittest.TestCase):
                 np.testing.assert_allclose(result[:, :, 1], test_image[:, :, 1])
                 np.testing.assert_allclose(result[:, :, 2], test_image[:, :, 2])
 
+    def test_itk_reader_nrrd_reverse_indexing_owns_memory(self):
+        """Regression for #7372: reverse_indexing=True must own its buffer, not view ITK memory."""
+        test_image = np.arange(4 * 5 * 6, dtype=np.float32).reshape(4, 5, 6)
+        with tempfile.TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "test_image.nrrd")
+            itk.imwrite(itk.image_from_array(test_image), filename)
+            reader = ITKReader(reverse_indexing=True)
+            itk_img = reader.read(filename)
+            arr = reader._get_array_data(itk_img)
+            self.assertTrue(
+                arr.flags["OWNDATA"],
+                "ITKReader(reverse_indexing=True) must return an array that owns its memory; "
+                "a view from array_view_from_image can dangle after the ITK image is freed "
+                "(reported as a segfault for some NRRD files).",
+            )
+            np.testing.assert_allclose(arr, test_image)
+            result = LoadImage(
+                image_only=True, ensure_channel_first=True, reader="ITKReader", reverse_indexing=True
+            )(filename)
+            self.assertTupleEqual(tuple(result.shape), (1, 4, 5, 6))
+            np.testing.assert_allclose(result[0].numpy(), test_image)
+
     @parameterized.expand([TEST_CASE_22])
     def test_dicom_reader_consistency(self, filenames):
         itk_param = {"reader": "ITKReader"}
