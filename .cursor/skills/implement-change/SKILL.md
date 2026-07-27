@@ -36,7 +36,7 @@ Then take the cheapest honest path.
 **When the task is clear** — you can state the outcome, the scope, and the kind of change from the material in front of you — do not ask a long questionnaire. Post a short reading and one request for confirmation, **including PR destination**:
 
 ```
-Kind: bugfix
+Kind: bug fix
 Outcome: <what is true afterwards, in API or user-visible terms>
 Area: <module or file, if the material names it>
 Compatibility: <non-breaking | opt-in | declared break>
@@ -94,7 +94,7 @@ Otherwise proceed silently.
 2. **Check the premise before accepting it.** A reported bug is sometimes a convention mismatch rather than a defect — a caller's assumption about axis order, coordinate convention, or defaults may differ from MONAI's. Confirm what the library intends from its docstrings, the neighboring code, and the definitions it relies on. If the code matches its own convention and only the documentation is silent, the fix is documentation: say so and stop rather than changing behavior.
 3. If the failure is unclear, intermittent, or the mechanism is not obvious from reading, use Cursor's **Debug Mode**: state hypotheses, add instrumentation, gather evidence, then conclude.
 4. Write a **failing regression test** in the file the explorer named. Run it and confirm it fails **for the reported reason**, not for a setup error.
-5. Keep the captured before-state; it belongs in the PR's Verification section.
+5. Keep the captured before-state for chat and Phase 8. If useful, fold a short before/after sentence into **Description** — never a command log or extra PR section.
 
 A "fix" with no reproduced failure is unreviewable. If you cannot reproduce it, say so and stop — that is a finding, and it changes the task.
 
@@ -111,22 +111,12 @@ Keep it to something a reviewer could read in a minute. **Do not write the plan 
 **Fork only.** Default destination is the fork. `upstream` (`Project-MONAI/MONAI`) is read-only (fetch / compare / issues). Never `gh pr create` against upstream unless the human explicitly opted in during Phase 0. See `.cursor/rules/monai-pr-targets.mdc`.
 
 1. Create the branch from **`cursor-onboarding`**, named `[ticket_id]-[task_name]` — e.g. `7980-writer-install-hint`. That is the integration branch in this repository. Branching from `dev` would put your work on a tree without this onboarding layer, so none of the rules, hooks, or skills would apply while you edit.
-2. **Read `.github/pull_request_template.md`** and use it as the body's structure. It is the only PR template; never duplicate it under `.cursor/`.
-3. Fill it from the plan:
+2. **Read `.github/pull_request_template.md`** and use it as the **entire** PR body. It is the only template; never duplicate it under `.cursor/`. Do **not** append sections (`Verification`, `Validation`, agent status, Bugbot, scorecards, command dumps, or process narration).
+3. Fill only the template fields from the plan:
    - `Fixes # .` → the issue number, or `N/A` plus one line on where the request came from (upstream issue numbers are fine as text; the PR itself stays on the fork)
-   - **Description** → the plan summary, in prose
-   - **Types of changes** → check only what is already true; revisit after verification
-4. Append one additive section at the end of the body — not a second template, not a scorecard:
-
-```markdown
-### Verification
-- Commands run: (fill after local verify)
-- Results: (paste key outcome)
-- Agent pre-review (`monai-verifier`): (critical / nits)
-- Bugbot: pending | clean | link
-```
-
-5. Open the draft with an **explicit fork `--repo`**. Never omit `--repo` in a fork-with-upstream clone (`gh` can target the wrong repository).
+   - **Description** → what changed and why, in prose (include repro honesty and out-of-scope notes here when relevant; for bug fixes, a short before/after sentence is fine — not a command log)
+   - **Types of changes** → check only what is already true; remove unchecked items when they do not apply (per the template comment); revisit after local verify
+4. Open the draft with an **explicit fork `--repo`**. Never omit `--repo` in a fork-with-upstream clone (`gh` can target the wrong repository).
 
 **Mandatory recipe** (print this exact command with repo + base + head and confirm `$FORK` is the fork before running):
 
@@ -140,7 +130,7 @@ gh pr create --draft --repo "$FORK" --base <base> --head <task-branch> --title "
 
 **Wrong-repo recovery:** If a PR was opened on `Project-MONAI/MONAI` (or any repo other than the fork), stop, tell the human, close it with `gh pr close` on that repo, then open the correct fork PR. Never leave the wrong PR open. Closing does not delete it.
 
-Do not add report-card matrices, self-assessment tables, or process narration. Reviewers want the change and the evidence.
+The PR body must match `.github/pull_request_template.md` only. Keep verifier results, Bugbot status, and command evidence in chat — never in the PR description.
 
 ## Phase 5 — Implement
 
@@ -167,15 +157,15 @@ If the environment cannot run the tests, say exactly that and treat it as an ope
 
 Launch the **`monai-verifier`** subagent. It is read-only and returns critical / should-fix / nit findings plus a ready-or-not verdict.
 
-Fix everything in **Critical**. Address should-fix items or say why not, and re-run the affected tests afterwards. Do not argue with the verifier in chat — either fix the finding or record the reason in the PR.
+Fix everything in **Critical**. Address should-fix items or say why not, and re-run the affected tests afterwards. Do not argue with the verifier in chat — either fix the finding or record the reason in chat. Do not add verifier output to the PR body.
 
 ## Phase 8 — Update the PR
 
 - Refresh the Description if the approach changed during implementation.
-- Update the **Types of changes** boxes so they are true now, including the breaking-change box.
-- Fill **Verification** with the real commands and their key output, the verifier's summary, and Bugbot status.
-- For a bug fix, include the before-and-after evidence from Phase 2b.
-- Record any assumption you carried forward from Phase 0 as an open question for the reviewer.
+- Update the **Types of changes** boxes so they are true now, including the breaking-change box; remove unchecked items that do not apply.
+- Keep the body on the template only — no new sections, no command dumps, no verifier or Bugbot lines.
+- For a bug fix, a short before/after sentence in Description is enough when it helps the reviewer.
+- Record any assumption you carried forward from Phase 0 as an open question for the reviewer (in Description, one or two sentences).
 
 ## Phase 9 — Push and hand off
 
