@@ -299,6 +299,47 @@ class TestDeprecated(unittest.TestCase):
         with self.assertWarnsRegex(FutureWarning, "1.7.0"):
             self.assertEqual(afoo4(b=2), 2)
 
+    def test_replacement_arg_default_not_treated_as_used(self):
+        """A defaulted legacy alias must not warn or error when only the new name is used."""
+
+        @deprecated_arg("b", new_name="a", since="1.7.0", removed="1.9.0", version_val="1.7.0")
+        def afoo_kwonly(a, *, b=None):
+            return a, b
+
+        @deprecated_arg("b", new_name="a", since="1.7.0", removed="1.9.0", version_val="1.7.0")
+        def afoo_kwargs(a, **kwargs):
+            return a, kwargs
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            self.assertEqual(afoo_kwonly(a=2), (2, None))
+            self.assertEqual(afoo_kwonly(2), (2, None))
+            self.assertEqual(afoo_kwargs(a=2), (2, {}))
+            self.assertEqual(afoo_kwargs(2), (2, {}))
+
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afoo_kwonly(b=2), (2, 2))
+        with self.assertWarns(FutureWarning):
+            self.assertEqual(afoo_kwargs(b=2), (2, {}))
+
+        @deprecated_arg("b", new_name="a", since="1.7.0", removed="1.9.0", version_val="1.9.0")
+        def afoo_removed_kwonly(a, *, b=None):
+            return a, b
+
+        @deprecated_arg("b", new_name="a", since="1.7.0", removed="1.9.0", version_val="1.9.0")
+        def afoo_removed_kwargs(a, **kwargs):
+            return a, kwargs
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            self.assertEqual(afoo_removed_kwonly(a=2), (2, None))
+            self.assertEqual(afoo_removed_kwargs(a=2), (2, {}))
+
+        with self.assertRaises(DeprecatedError):
+            afoo_removed_kwonly(b=2)
+        with self.assertRaises(DeprecatedError):
+            afoo_removed_kwargs(b=2)
+
     def test_replacement_arg1(self):
         """
         Test deprecated arg being replaced with kwargs.

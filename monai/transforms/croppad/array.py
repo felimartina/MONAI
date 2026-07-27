@@ -518,13 +518,12 @@ class CenterSpatialCrop(Crop):
         new_name="spatial_size",
         msg_suffix="please use `spatial_size` instead.",
     )
-    def __init__(
-        self,
-        spatial_size: Sequence[int] | int,
-        lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
-    ) -> None:
+    def __init__(self, spatial_size: Sequence[int] | int, lazy: bool = False, **kwargs: Any) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         super().__init__(lazy=lazy)
         self.roi_size = spatial_size
 
@@ -619,9 +618,13 @@ class RandSpatialCrop(Randomizable, Crop):
         random_center: bool = True,
         random_size: bool = False,
         lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
+        **kwargs: Any,
     ) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         super().__init__(lazy)
         self.roi_size = spatial_size
         self.max_roi_size = max_roi_size
@@ -777,9 +780,13 @@ class RandSpatialCropSamples(Randomizable, TraceableTransform, LazyTransform, Mu
         random_center: bool = True,
         random_size: bool = False,
         lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
+        **kwargs: Any,
     ) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         LazyTransform.__init__(self, lazy)
         if num_samples < 1:
             raise ValueError(f"num_samples must be positive, got {num_samples}.")

@@ -634,9 +634,13 @@ class CenterSpatialCropd(Cropd):
         spatial_size: Sequence[int] | int,
         allow_missing_keys: bool = False,
         lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
+        **kwargs: Any,
     ) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         cropper = CenterSpatialCrop(spatial_size=spatial_size, lazy=lazy)
         super().__init__(keys, cropper=cropper, allow_missing_keys=allow_missing_keys, lazy=lazy)
 
@@ -724,9 +728,13 @@ class RandSpatialCropd(RandCropd):
         random_size: bool = False,
         allow_missing_keys: bool = False,
         lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
+        **kwargs: Any,
     ) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         cropper = RandSpatialCrop(
             spatial_size=spatial_size,
             max_roi_size=max_roi_size,
@@ -843,9 +851,13 @@ class RandSpatialCropSamplesd(Randomizable, MapTransform, LazyTransform, MultiSa
         random_size: bool = False,
         allow_missing_keys: bool = False,
         lazy: bool = False,
-        *,
-        roi_size: Sequence[int] | int | None = None,
+        **kwargs: Any,
     ) -> None:
+        if kwargs:
+            raise TypeError(
+                f"{type(self).__name__}.__init__() got unexpected keyword argument(s): "
+                f"{', '.join(repr(k) for k in kwargs)}."
+            )
         MapTransform.__init__(self, keys, allow_missing_keys)
         LazyTransform.__init__(self, lazy)
         self.cropper = RandSpatialCropSamples(

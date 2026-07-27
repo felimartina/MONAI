@@ -193,10 +193,22 @@ def deprecated_arg(
         msg = f"{msg_prefix} {msg_infix} {msg_suffix}".strip()
 
         sig = inspect.signature(func)
+        positional_params = [
+            pname
+            for pname, param in sig.parameters.items()
+            if param.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
 
         @wraps(func)
         def _wrapper(*args, **kwargs):
-            if new_name is not None and name in kwargs and new_name not in kwargs:
+            # Only treat the deprecated name as used when the caller provided it explicitly.
+            # ``Signature.bind`` does not apply defaults (``apply_defaults`` would), but we
+            # still decide from the original call shape so a defaulted keyword-only alias
+            # like ``*, roi_size=None`` can never be mistaken for an explicit ``roi_size``.
+            deprecated_as_kwarg = name in kwargs
+            deprecated_positional = (not deprecated_as_kwarg) and name in positional_params[: len(args)]
+
+            if new_name is not None and deprecated_as_kwarg and new_name not in kwargs:
                 # replace the deprecated arg "name" with "new_name"
                 # if name is specified and new_name is not specified
                 kwargs[new_name] = kwargs[name]
@@ -205,8 +217,8 @@ def deprecated_arg(
                 except TypeError:
                     # multiple values for new_name using both args and kwargs
                     kwargs.pop(new_name, None)
+
             binding = sig.bind(*args, **kwargs).arguments
-            positional_found = name in binding
             kw_found = False
             for k, param in sig.parameters.items():
                 if param.kind == inspect.Parameter.VAR_KEYWORD and k in binding and name in binding[k]:
@@ -214,7 +226,7 @@ def deprecated_arg(
                     # if the deprecated arg is found in the **kwargs, it should be removed
                     kwargs.pop(name, None)
 
-            if positional_found or kw_found:
+            if deprecated_as_kwarg or deprecated_positional or kw_found:
                 if is_removed:
                     raise DeprecatedError(msg)
                 if is_deprecated:

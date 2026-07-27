@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import unittest
+import warnings
 
 import numpy as np
 from parameterized import parameterized
@@ -61,6 +62,13 @@ class TestCenterSpatialCrop(CropTest):
         with self.assertWarnsRegex(FutureWarning, "spatial_size"):
             result = CenterSpatialCrop(spatial_size=(3, 3), roi_size=(2, 2))(data)
         self.assertTupleEqual(result.shape, (1, 3, 3))
+
+    def test_spatial_size_does_not_warn(self):
+        data = np.arange(25).reshape((1, 5, 5))
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            result = CenterSpatialCrop(spatial_size=(2, 2))(data)
+        self.assertTupleEqual(result.shape, (1, 2, 2))
 
 
 if __name__ == "__main__":
