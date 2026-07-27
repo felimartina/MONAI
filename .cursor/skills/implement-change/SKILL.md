@@ -94,7 +94,7 @@ Otherwise proceed silently.
 2. **Check the premise before accepting it.** A reported bug is sometimes a convention mismatch rather than a defect — a caller's assumption about axis order, coordinate convention, or defaults may differ from MONAI's. Confirm what the library intends from its docstrings, the neighboring code, and the definitions it relies on. If the code matches its own convention and only the documentation is silent, the fix is documentation: say so and stop rather than changing behavior.
 3. If the failure is unclear, intermittent, or the mechanism is not obvious from reading, use Cursor's **Debug Mode**: state hypotheses, add instrumentation, gather evidence, then conclude.
 4. Write a **failing regression test** in the file the explorer named. Run it and confirm it fails **for the reported reason**, not for a setup error.
-5. Keep the captured before-state for chat and Phase 8. If useful, fold a short before/after sentence into **Description** — never a command log or extra PR section.
+5. Keep the captured before-state for chat and Phase 7. If useful, fold a short before/after sentence into **Description** — never a command log or extra PR section.
 
 A "fix" with no reproduced failure is unreviewable. If you cannot reproduce it, say so and stop — that is a finding, and it changes the task.
 
@@ -130,7 +130,7 @@ gh pr create --draft --repo "$FORK" --base <base> --head <task-branch> --title "
 
 **Wrong-repo recovery:** If a PR was opened on `Project-MONAI/MONAI` (or any repo other than the fork), stop, tell the human, close it with `gh pr close` on that repo, then open the correct fork PR. Never leave the wrong PR open. Closing does not delete it.
 
-The PR body must match `.github/pull_request_template.md` only. Keep verifier results, Bugbot status, and command evidence in chat — never in the PR description.
+The PR body must match `.github/pull_request_template.md` only. Keep Bugbot status and command evidence in chat — never in the PR description.
 
 ## Phase 5 — Implement
 
@@ -153,25 +153,21 @@ For a bug fix, confirm the regression test now passes and that you can still exp
 
 If the environment cannot run the tests, say exactly that and treat it as an open item — do not check the PR template's test boxes.
 
-## Phase 7 — Agent pre-review
+Hooks, rules, local tests, Bugbot, CodeRabbit, and CI are the defense layers — do not launch a separate verifier subagent.
 
-Launch the **`monai-verifier`** subagent. It is read-only and returns critical / should-fix / nit findings plus a ready-or-not verdict.
-
-Fix everything in **Critical**. Address should-fix items or say why not, and re-run the affected tests afterwards. Do not argue with the verifier in chat — either fix the finding or record the reason in chat. Do not add verifier output to the PR body.
-
-## Phase 8 — Update the PR
+## Phase 7 — Update the PR
 
 - Refresh the Description if the approach changed during implementation.
 - Update the **Types of changes** boxes so they are true now, including the breaking-change box; remove unchecked items that do not apply.
-- Keep the body on the template only — no new sections, no command dumps, no verifier or Bugbot lines.
+- Keep the body on the template only — no new sections, no command dumps, no Bugbot lines.
 - For a bug fix, a short before/after sentence in Description is enough when it helps the reviewer.
 - Record any assumption you carried forward from Phase 0 as an open question for the reviewer (in Description, one or two sentences).
 
-## Phase 9 — Push and hand off
+## Phase 8 — Push and hand off
 
 | Environment | Gate |
 |-------------|------|
 | IDE / local | Ask before committing or pushing when the intent is unclear; the human decides when the PR is ready |
 | Cloud agent / automation | **Stop at the draft PR.** Never mark ready, never merge, never force-push |
 
-Push and let Bugbot, CodeRabbit, and CI run. Mark the PR ready for review only when tests pass, the verifier has no criticals, and the human agrees.
+Push and let Bugbot, CodeRabbit, and CI run. Mark the PR ready for review only when tests pass and the human agrees.
