@@ -468,6 +468,9 @@ def require_pkg(
         raise_error: if True, raise `OptionalImportError` error if the required package is not installed
             or the version doesn't match requirement, if False, print the error in a warning.
 
+    Raises:
+        OptionalImportError: When ``raise_error`` is True and the package is missing or the version does not
+            match. The exception's ``name`` attribute is set to ``pkg_name`` for install-hint construction.
     """
 
     def _decorator(obj):
