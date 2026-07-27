@@ -62,7 +62,17 @@ from monai.utils import (
 def _resolve_crop_size(
     roi_size: Sequence[int] | int | None, spatial_size: Sequence[int] | int | None
 ) -> Sequence[int] | int:
-    """Resolve preferred ``roi_size`` with deprecated ``spatial_size`` alias."""
+    """Resolve preferred ``roi_size`` with deprecated ``spatial_size`` alias.
+
+    Raises:
+        ValueError: when neither size is provided, or both are provided with different values.
+    """
+    if roi_size is not None and spatial_size is not None:
+        if ensure_tuple(roi_size) != ensure_tuple(spatial_size):
+            raise ValueError(
+                "Got conflicting `roi_size` and deprecated `spatial_size`; please use only `roi_size`."
+            )
+        return roi_size
     if roi_size is None:
         if spatial_size is None:
             raise ValueError("`roi_size` must be specified (deprecated alias: `spatial_size`).")
@@ -521,6 +531,9 @@ class CenterSpatialCrop(Crop):
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     @deprecated_arg(
@@ -614,6 +627,9 @@ class RandSpatialCrop(Randomizable, Crop):
 
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -768,6 +784,7 @@ class RandSpatialCropSamples(Randomizable, TraceableTransform, LazyTransform, Mu
 
     Raises:
         ValueError: When ``num_samples`` is nonpositive.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -1027,6 +1044,9 @@ class RandWeightedCrop(Randomizable, TraceableTransform, LazyTransform, MultiSam
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     backend = SpatialCrop.backend
@@ -1168,6 +1188,7 @@ class RandCropByPosNegLabel(Randomizable, TraceableTransform, LazyTransform, Mul
     Raises:
         ValueError: When ``pos`` or ``neg`` are negative.
         ValueError: When ``pos=0`` and ``neg=0``. Incompatible values.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -1372,6 +1393,9 @@ class RandCropByLabelClasses(Randomizable, TraceableTransform, LazyTransform, Mu
 
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
