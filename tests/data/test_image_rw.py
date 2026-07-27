@@ -33,7 +33,7 @@ from monai.data.image_writer import (
 )
 from monai.data.meta_tensor import MetaTensor
 from monai.transforms import LoadImage, SaveImage, moveaxis
-from monai.utils import MetaKeys, OptionalImportError, optional_import
+from monai.utils import MetaKeys, OptionalImportError, optional_import, require_pkg
 from tests.test_utils import TEST_NDARRAYS, assert_allclose
 
 _, has_itk = optional_import("itk", allow_namespace_pkg=True)
@@ -189,8 +189,6 @@ class TestRegRes(unittest.TestCase):
                 resolve_writer("unknown")
 
     def test_missing_writer_hint_from_require_pkg(self):
-        from monai.utils import require_pkg
-
         @require_pkg(pkg_name="not_a_real_image_writer_pkg")
         class MissingPkgWriter:
             pass
