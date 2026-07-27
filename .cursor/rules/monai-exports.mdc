@@ -1,0 +1,15 @@
+---
+description: Exporting new public MONAI APIs via __all__ and package __init__
+globs: monai/**/*.py
+alwaysApply: false
+---
+
+# Public API exports
+
+Canonical: `CONTRIBUTING.md` → "Exporting modules". Two places, both required:
+
+- The defining module's `__all__`, **and** the owning package's `__init__.py`.
+- Dictionary transforms export the `...d` class *and* its `...D` / `...Dict` aliases — keep them in step. See `monai/apps/detection/transforms/dictionary.py`.
+- User-facing APIs also need a `docs/source/*.rst` entry.
+
+Verify rather than assume: `python -c "from monai.apps.detection.transforms.dictionary import BoxToMaskd"`. Names beginning with `_` are not exported.

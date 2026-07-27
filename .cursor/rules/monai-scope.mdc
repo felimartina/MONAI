@@ -1,0 +1,17 @@
+---
+description: Scope judgment for MONAI changes - medical specificity, dependencies, diff size
+alwaysApply: true
+---
+
+# Scope: does this change belong in MONAI, here, now?
+
+- **Layer check.** General deep-learning or array functionality usually belongs in PyTorch or NumPy — see `CONTRIBUTING.md` → "Does it belong in PyTorch instead of MONAI?".
+- **Reuse first.** Look for an existing implementation; prefer `monai/utils/` and module-level helpers over writing another one.
+- **Small diff.** No drive-by refactors, no reformatting untouched code, no renaming unrelated symbols.
+- **Hot zones.** Check `.github/CODEOWNERS`. Specialized paths (`monai/networks/schedulers/`, `monai/inferers/inferer.py`, several `monai/networks/nets/*`) need the owner's agreement first.
+- **Opt in.** Add a flag defaulting to today's behavior rather than changing what existing users get.
+- **No new dependency** in a routine fix, and never a top-level import of an optional one — use `monai.utils.optional_import`.
+
+Platform paths are blocked by the governance hook: `AGENTS.md`, `.cursor/hooks/**`, `.cursor/agents/**`, `.cursor/BUGBOT.md`, the `implement-change` and `create-issue` skills, and CI configuration. Dependency files, `tests/min_tests.py`, and `.cursor/rules/**` need human approval. If the task appears to need one, stop and ask instead of finding another route.
+
+When scope is unclear, ask rather than widening the change. A second PR is the normal answer.

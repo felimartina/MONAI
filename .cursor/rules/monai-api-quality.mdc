@@ -1,0 +1,17 @@
+---
+description: Docstring and public-API quality expectations for MONAI
+globs: monai/**/*.py
+alwaysApply: false
+---
+
+# API quality
+
+`.coderabbit.yaml` enforces most of this at review time, and ruff and black own formatting. What needs your attention while editing:
+
+- **Google-style docstrings** on new or changed public definitions: every argument, the return value, and each raised exception, with names matching the signature.
+- **Update the docstring with the behavior.** A docstring that survives a behavior change is a bug, not a nit.
+- **Never document an axis, shape, or ordering the code does not implement.** This is the most common wrong claim in box, mask, and spatial APIs — verify against the code rather than intuition.
+- Keep docstring examples runnable and consistent with the shapes they describe.
+- Match the module's typing style (`from __future__ import annotations`, `NdarrayOrTensor`).
+
+`convert_box_to_mask` in `monai/apps/detection/transforms/box_ops.py` is the reference for documenting args, shape semantics, and raises.
