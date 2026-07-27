@@ -102,6 +102,7 @@ from .misc import (
     to_tuple_of_dictionaries,
     unsqueeze_left,
     unsqueeze_right,
+    validate_spatial_size,
     zip_with,
 )
 from .module import (

@@ -55,6 +55,7 @@ from monai.utils import (
     ensure_tuple_rep,
     fall_back_tuple,
     look_up_option,
+    validate_spatial_size,
 )
 
 __all__ = [
@@ -581,6 +582,10 @@ class RandSpatialCrop(Randomizable, Crop):
         random_size: crop with random size or specific size ROI.
             if True, the actual size is sampled from `randint(roi_size, max_roi_size + 1)`.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+
+    Raises:
+        ValueError: when a resolved ROI size (after non-positive components fall back to the
+            image size) still has a zero or negative dimension.
     """
 
     def __init__(
@@ -600,9 +605,10 @@ class RandSpatialCrop(Randomizable, Crop):
         self._slices: tuple[slice, ...]
 
     def randomize(self, img_size: Sequence[int]) -> None:
-        self._size = fall_back_tuple(self.roi_size, img_size)
+        self._size = validate_spatial_size(fall_back_tuple(self.roi_size, img_size), name="roi_size")
         if self.random_size:
             max_size = img_size if self.max_roi_size is None else fall_back_tuple(self.max_roi_size, img_size)
+            max_size = validate_spatial_size(max_size, name="max_roi_size")
             if any(i > j for i, j in zip(self._size, max_size)):
                 raise ValueError(f"min ROI size: {self._size} is larger than max ROI size: {max_size}.")
             self._size = tuple(self.R.randint(low=self._size[i], high=max_size[i] + 1) for i in range(len(img_size)))

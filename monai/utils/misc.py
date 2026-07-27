@@ -50,6 +50,7 @@ __all__ = [
     "ensure_tuple_rep",
     "to_tuple_of_dictionaries",
     "fall_back_tuple",
+    "validate_spatial_size",
     "is_scalar_tensor",
     "is_scalar",
     "progress_bar",
@@ -301,6 +302,28 @@ def fall_back_tuple(
     return tuple(  # use the default values if user provided is not valid
         user_c if func(user_c) else default_c for default_c, user_c in zip(default, user)
     )
+
+
+def validate_spatial_size(spatial_size: Sequence[int], name: str = "spatial_size") -> tuple[int, ...]:
+    """
+    Ensure every spatial dimension is strictly positive.
+
+    Args:
+        spatial_size: spatial size sequence to validate.
+        name: name used in the error message (for example ``"roi_size"``).
+
+    Raises:
+        ValueError: when one or more dimensions are zero or negative. The message lists
+            each failing dimension index and value.
+
+    Returns:
+        The input sizes as a tuple when every dimension is positive.
+    """
+    size = tuple(spatial_size)
+    invalid = [f"dim {i}={dim}" for i, dim in enumerate(size) if dim <= 0]
+    if invalid:
+        raise ValueError(f"{name} must have positive dimensions, got {size} with invalid {', '.join(invalid)}.")
+    return size
 
 
 def is_scalar_tensor(val: Any) -> bool:
