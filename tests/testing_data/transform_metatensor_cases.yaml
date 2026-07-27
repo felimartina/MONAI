@@ -24,7 +24,7 @@ TEST_CASE_1:
     k_divisible: 5
   - _target_: RandSpatialCropD
     keys: "@input_keys"
-    roi_size: [76, 87, 73]
+    spatial_size: [76, 87, 73]
     random_size: True
   - _target_: RandScaleCropD
     keys: "@input_keys"
