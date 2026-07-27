@@ -28,7 +28,12 @@ Do not open with a questionnaire. Read what you already have first: the request,
 
 Then take the cheapest honest path.
 
-**When the task is clear** — you can state the outcome, the scope, and the kind of change from the material in front of you — do not ask anything. Post a short reading and one request for confirmation:
+**Always settle PR destination** before Phase 4 (default below if the human does not override):
+
+- **Destination:** fork only (`origin` / `gh repo view` nameWithOwner). Never open a PR on `Project-MONAI/MONAI` unless the human explicitly opts into an upstream PR in this conversation.
+- **Base(s) on the fork:** `dev` and/or `cursor-onboarding`. Multiple draft PRs from the same head are fine — each is only a comparison (`gh pr create --base <base>`). Do **not** merge, rebase, or pull `cursor-onboarding` (or `dev`) into the task branch just to open another PR.
+
+**When the task is clear** — you can state the outcome, the scope, and the kind of change from the material in front of you — do not ask a long questionnaire. Post a short reading and one request for confirmation, **including PR destination**:
 
 ```
 Kind: bugfix
@@ -36,6 +41,8 @@ Outcome: <what is true afterwards, in API or user-visible terms>
 Area: <module or file, if the material names it>
 Compatibility: <non-breaking | opt-in | declared break>
 Out of scope: <what you will not touch>
+PR destination: fork only (default)
+PR base(s): <dev and/or cursor-onboarding>
 
 Correct me, or say go.
 ```
@@ -46,7 +53,9 @@ One message, one yes. Do not also ask a list of questions.
 
 - the answer changes what you build, not just how you describe it
 - you cannot get it from the issue, the code, or `git log`
-- it is a decision only a human can make — intended behavior, tolerable breakage, scope boundary, priority
+- it is a decision only a human can make — intended behavior, tolerable breakage, scope boundary, priority, **or PR destination/base**
+
+If PR destination or base is not stated and matters for the demo or handoff, use one of those three slots for it (default remains fork only).
 
 **Never ask:**
 
@@ -55,7 +64,7 @@ One message, one yes. Do not also ask a list of questions.
 - anything stated in the request you were just handed.
 - two questions about the same decision.
 
-**If the person does not know, that is an answer.** Do not re-ask and do not stall. Name the assumption you are proceeding on, say why it is the safer default, and carry it into the PR description as an open question for the maintainer. A stated assumption a reviewer can correct beats a blocked task nobody in the room can unblock.
+**If the person does not know, that is an answer.** Do not re-ask and do not stall. Name the assumption you are proceeding on, say why it is the safer default, and carry it into the PR description as an open question for the maintainer. A stated assumption a reviewer can correct beats a blocked task nobody in the room can unblock. For PR destination, the safer default is **fork only** with base(s) the human named (or `cursor-onboarding` when working on this onboarding layer).
 
 Questions that only become concrete after reading the code belong in Phase 2.
 
@@ -77,9 +86,9 @@ This is where a real question usually belongs, because now it is concrete and yo
 
 Otherwise proceed silently.
 
-## Phase 2b — Reproduce first (bugfix only)
+## Phase 2b — Reproduce first (bug fix only)
 
-**Skip this phase only if the change is not a bugfix.** For a bugfix, do not write a fix before you have seen the failure.
+**Skip this phase only if the change is not a bug fix.** For a bug fix, do not write a fix before you have seen the failure.
 
 1. Run the reporter's repro, or a minimal case built from the request. Capture the **actual** values and the exact command.
 2. **Check the premise before accepting it.** A reported bug is sometimes a convention mismatch rather than a defect — a caller's assumption about axis order, coordinate convention, or defaults may differ from MONAI's. Confirm what the library intends from its docstrings, the neighboring code, and the definitions it relies on. If the code matches its own convention and only the documentation is silent, the fix is documentation: say so and stop rather than changing behavior.
@@ -99,10 +108,12 @@ Keep it to something a reviewer could read in a minute. **Do not write the plan 
 
 `CONTRIBUTING.md` asks for pull requests early, as drafts. Open it now, before implementing, so the plan is visible while the work happens.
 
+**Fork only.** Default destination is the fork. `upstream` (`Project-MONAI/MONAI`) is read-only (fetch / compare / issues). Never `gh pr create` against upstream unless the human explicitly opted in during Phase 0. See `.cursor/rules/monai-pr-targets.mdc`.
+
 1. Create the branch from **`cursor-onboarding`**, named `[ticket_id]-[task_name]` — e.g. `7980-writer-install-hint`. That is the integration branch in this repository. Branching from `dev` would put your work on a tree without this onboarding layer, so none of the rules, hooks, or skills would apply while you edit.
 2. **Read `.github/pull_request_template.md`** and use it as the body's structure. It is the only PR template; never duplicate it under `.cursor/`.
 3. Fill it from the plan:
-   - `Fixes # .` → the issue number, or `N/A` plus one line on where the request came from
+   - `Fixes # .` → the issue number, or `N/A` plus one line on where the request came from (upstream issue numbers are fine as text; the PR itself stays on the fork)
    - **Description** → the plan summary, in prose
    - **Types of changes** → check only what is already true; revisit after verification
 4. Append one additive section at the end of the body — not a second template, not a scorecard:
@@ -115,13 +126,19 @@ Keep it to something a reviewer could read in a minute. **Do not write the plan 
 - Bugbot: pending | clean | link
 ```
 
-Open it as a draft against the branch you started from:
+5. Open the draft with an **explicit fork `--repo`**. Never omit `--repo` in a fork-with-upstream clone (`gh` can target the wrong repository).
+
+**Mandatory recipe** (print this exact command with repo + base + head and confirm `$FORK` is the fork before running):
 
 ```bash
-gh pr create --draft --base cursor-onboarding --title "..." --body "..."
+FORK=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+# Abort if FORK is Project-MONAI/MONAI unless the human opted into an upstream PR.
+gh pr create --draft --repo "$FORK" --base <base> --head <task-branch> --title "..." --body "..."
 ```
 
-Targeting `dev` instead would show this entire onboarding layer as part of your change. Contributing the same fix upstream to `Project-MONAI/MONAI` does target `dev`, and that is a separate step a human takes deliberately.
+`<base>` is a branch **on the fork** — usually `dev`, or `cursor-onboarding` when the PR should land on this onboarding integration branch. A second PR onto `cursor-onboarding` is another `gh pr create --repo "$FORK" --base cursor-onboarding --head <task-branch>`; it does **not** require merging or rebasing `cursor-onboarding` into the task branch.
+
+**Wrong-repo recovery:** If a PR was opened on `Project-MONAI/MONAI` (or any repo other than the fork), stop, tell the human, close it with `gh pr close` on that repo, then open the correct fork PR. Never leave the wrong PR open. Closing does not delete it.
 
 Do not add report-card matrices, self-assessment tables, or process narration. Reviewers want the change and the evidence.
 
@@ -142,7 +159,7 @@ python -m tests.<path>.test_<module>   # the specific module you changed
 ./runtests.sh --quick --unittests      # broader sweep when the change warrants it
 ```
 
-For a bugfix, confirm the regression test now passes and that you can still explain why it failed before.
+For a bug fix, confirm the regression test now passes and that you can still explain why it failed before.
 
 If the environment cannot run the tests, say exactly that and treat it as an open item — do not check the PR template's test boxes.
 
@@ -157,7 +174,7 @@ Fix everything in **Critical**. Address should-fix items or say why not, and re-
 - Refresh the Description if the approach changed during implementation.
 - Update the **Types of changes** boxes so they are true now, including the breaking-change box.
 - Fill **Verification** with the real commands and their key output, the verifier's summary, and Bugbot status.
-- For a bugfix, include the before-and-after evidence from Phase 2b.
+- For a bug fix, include the before-and-after evidence from Phase 2b.
 - Record any assumption you carried forward from Phase 0 as an open question for the reviewer.
 
 ## Phase 9 — Push and hand off

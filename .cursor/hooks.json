@@ -18,6 +18,13 @@
                 "failClosed": true,
                 "timeout": 10
             }
+        ],
+        "beforeShellExecution": [
+            {
+                "command": "python3 .cursor/hooks/deny-upstream-pr.py",
+                "failClosed": true,
+                "timeout": 10
+            }
         ]
     }
 }

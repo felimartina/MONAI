@@ -1,0 +1,35 @@
+---
+description: Fork-only pull request targets — never open PRs on upstream by default
+alwaysApply: true
+---
+
+# Pull requests: fork only (default)
+
+Default PR target is the **fork** (`origin`), never public upstream `Project-MONAI/MONAI`.
+
+## Must
+
+- Resolve the fork before any `gh pr create`:
+  `FORK=$(gh repo view --json nameWithOwner -q .nameWithOwner)`
+  (or derive the same owner/repo from `git remote get-url origin`).
+- Open draft PRs with an explicit fork repo flag:
+  `gh pr create --draft --repo "$FORK" --base <base> --head <task-branch> ...`
+- Before running `gh pr create`, print the exact command (repo + base + head) and confirm `$FORK` is the fork, not `Project-MONAI/MONAI`.
+- Multiple bases on the fork are fine (`dev`, `cursor-onboarding`). A PR is a comparison (`--base <branch>`); do **not** merge, rebase, or pull that base into the task branch unless the human asks.
+- If a PR was opened on the wrong repo: stop, tell the human, `gh pr close` it on that repo, open the correct fork PR. Closing does not delete the wrong PR — never leave it.
+
+## Must not
+
+- NEVER run `gh pr create` / `gh pr create --repo Project-MONAI/MONAI` (or any equivalent that opens a PR on upstream) unless the human **explicitly** asked for an upstream PR in this conversation.
+- NEVER omit `--repo` when this clone has both `origin` (fork) and `upstream` — `gh` can target the wrong repository.
+- NEVER push to `upstream`. That remote is fetch / read / compare / issues only.
+- NEVER treat “open a second PR against `cursor-onboarding`” as a reason to merge `cursor-onboarding` into the head branch.
+
+## Remotes
+
+| Remote | Role |
+|--------|------|
+| `origin` | Fork — push and open PRs here |
+| `upstream` | `Project-MONAI/MONAI` — read-only unless the human opts into an upstream PR |
+
+Hard enforcement: `.cursor/hooks/deny-upstream-pr.py` on `beforeShellExecution` denies upstream-targeted `gh pr create` (and ambiguous creates missing `--repo`).

@@ -48,7 +48,15 @@ python -m tests.apps.detection.test_box_transform  # one test module (dotted pat
 git commit -s -m "message"                         # DCO sign-off is mandatory
 ```
 
-Branches for a tracked issue are named `[ticket_id]-[task_name]` and are cut from `cursor-onboarding`, the integration branch in this repository. Pull requests open as drafts early and target `cursor-onboarding`; a change contributed upstream to `Project-MONAI/MONAI` targets `dev` instead.
+Branches for a tracked issue are named `[ticket_id]-[task_name]` and are cut from `cursor-onboarding`, the integration branch in this repository. Draft PRs open early on the **fork** (see below).
+
+## Remotes & pull requests
+
+- **`origin`** = your fork — push here; open draft PRs here only by default.
+- **`upstream`** = `Project-MONAI/MONAI` — fetch, compare, and read issues only. Do not push; do not open PRs there unless a human explicitly asks in the conversation.
+- Skills resolve the fork and pass it explicitly: `FORK=$(gh repo view --json nameWithOwner -q .nameWithOwner)` then `gh pr create --repo "$FORK" --base <base> ...`. Never omit `--repo` when both remotes exist.
+- Bases on the fork (`dev`, `cursor-onboarding`) are comparisons only — opening a PR against `cursor-onboarding` does not require merging that branch into the head.
+- Soft rule: `.cursor/rules/monai-pr-targets.mdc`. Hard gate: `.cursor/hooks/deny-upstream-pr.py` on `beforeShellExecution`.
 
 ## Policy
 
