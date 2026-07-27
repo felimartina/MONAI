@@ -3,9 +3,10 @@ name: create-issue
 description: >-
   File a well-formed GitHub issue against MONAI. Use when someone wants to
   report a bug, request a feature, or turn a rough complaint into an actionable
-  ticket. Grills for detail, validates the report against the library's actual
-  conventions, searches for duplicates, and fills the repository's issue
-  template. Does not change any code.
+  ticket. Triages briefly, researches tracker and code when the ask already
+  names an API and outcome, asks only for gaps, validates against the library's
+  conventions, and fills the repository's issue template. Does not change any
+  code.
 ---
 
 # File a MONAI issue
@@ -16,9 +17,32 @@ For anyone reporting a problem or requesting a change — product managers, QA, 
 
 Usage questions are not issues — MONAI directs those to [Discussions](https://github.com/Project-MONAI/MONAI/discussions). If this is a "how do I..." question, say so and stop.
 
-## Phase 0 — Grill (blocking)
+## Phase 0 — Triage (brief)
 
-Ask **3 to 7** questions, then **stop and wait**. Ask only what the engineer would need, and skip anything already answered.
+Classify the ask in one short pass: **usage question** (→ Discussions, stop), **bug**, **feature**, or **docs**. Do not open a long intake questionnaire here.
+
+Then choose a path:
+
+| Ask shape | Next step |
+|-----------|-----------|
+| **Concrete** — names an API/symbol (or module) and a desired outcome (e.g. fail-fast, wrong value, missing docs) | **Phase 1a — Research first** |
+| **Vague** — no API, no expected behavior, no repro, and search keywords are unclear | **Phase 1b — Grill first** |
+
+Example of concrete: `LoadImage(reader="ITKReader")` should fail fast when the reader is missing, not warn and fall back.
+
+## Phase 1a — Research first (concrete asks)
+
+When the request already names an API and a desired outcome, **search the tracker and skim the relevant code/docs before asking clarifying questions.**
+
+1. **Search** duplicates and related issues/PRs (commands in Phase 3).
+2. **Skim** the named API: docstring, neighboring implementation, and any note in `CONTRIBUTING.md` that bears on the behavior.
+3. **Share findings** with the human in a few sentences — e.g. "matches #7437; current behavior is warn+fallback at `…`; docstring says …".
+
+Do not re-ask what the human already stated or what the code/issue already shows.
+
+## Phase 1b — Grill first (vague asks only)
+
+Ask **3 to 7** questions, then **stop and wait**. Ask only what the engineer would need, and skip anything already answered. Use this path only when the ask is too thin to search or skim productively.
 
 For a bug:
 1. What did you run? Exact code, or the smallest snippet that shows it.
@@ -34,13 +58,37 @@ For a feature:
 4. Is this medical-imaging specific, or general to PyTorch or NumPy?
 5. Who else needs it, and how urgently?
 
-Do not proceed on assumptions. If the reporter cannot produce a reproducer, say that the issue will likely stall without one.
+Do not proceed on assumptions. If the reporter cannot produce a reproducer, say that the issue will likely stall without one. After answers land, continue with Phase 2 (gap questions only if still needed), then Phases 3–8.
 
-## Phase 1 — Validate against the library's conventions
+## Phase 2 — Clarifying questions (gaps only)
+
+After research (1a) or grill answers (1b), ask **2 to 4** questions **only** for gaps research cannot answer:
+
+- Product choice (e.g. fail-fast vs opt-in flag)
+- Scope boundaries
+- Impact / priority
+- Missing repro, if still required to file a bug
+
+Never re-ask what the human already stated or what code/issue already shows. If there are no material gaps, skip this phase and say so briefly.
+
+## Phase 3 — Search for duplicates and related work
+
+Never file without searching. If Phase 1a already ran these queries, reuse that result — do not search twice unless keywords improved. Report what you found even when nothing matches.
+
+```bash
+gh issue list --repo Project-MONAI/MONAI --state all --search "<keywords>" --limit 20
+gh search issues --repo Project-MONAI/MONAI "<symbol or error text>" --limit 20
+gh pr list   --repo Project-MONAI/MONAI --state all --search "<module or symbol>" --limit 20
+gh issue view <number> --repo Project-MONAI/MONAI --comments
+```
+
+Search the error text, the symbol names, and the module — the same problem is often filed with different vocabulary. An open duplicate means comment there instead of filing; a closed one means check whether it was fixed after the reporter's version; an open PR means link it.
+
+## Phase 4 — Validate against the library's conventions
 
 **This is the phase that keeps bad issues out of the tracker.** Before accepting "this is broken", establish what the library intends. A report is a bug only if the code disagrees with its own documented or implied contract — not if it disagrees with the reporter's expectations.
 
-Read, in this order: the docstrings of the API involved, the neighboring implementation, the definitions it depends on (modes, enums, conventions), and any relevant note in `CONTRIBUTING.md`. Then decide which case you have:
+Deepen the Phase 1a skim (or start here after a vague grill). Read, in this order: the docstrings of the API involved, the neighboring implementation, the definitions it depends on (modes, enums, conventions), and any relevant note in `CONTRIBUTING.md`. Then decide which case you have:
 
 | Finding | What to file |
 |---------|--------------|
@@ -53,20 +101,7 @@ Read, in this order: the docstrings of the API involved, the neighboring impleme
 
 The observation was real and worth filing; the diagnosis was not, and it sent readers hunting a defect that did not exist. Filed well, it is a documentation issue — the axis order for box coordinates is unspecified and contradicts the torchvision meaning of `xyxy` — with the round-trip evidence attached. Always separate what was observed from what the reporter believes caused it, and verify the visualization or measurement itself before blaming the library.
 
-## Phase 2 — Search for duplicates and related work
-
-Never file without searching. Report what you found even when nothing matches.
-
-```bash
-gh issue list --repo Project-MONAI/MONAI --state all --search "<keywords>" --limit 20
-gh search issues --repo Project-MONAI/MONAI "<symbol or error text>" --limit 20
-gh pr list   --repo Project-MONAI/MONAI --state all --search "<module or symbol>" --limit 20
-gh issue view <number> --repo Project-MONAI/MONAI --comments
-```
-
-Search the error text, the symbol names, and the module — the same problem is often filed with different vocabulary. An open duplicate means comment there instead of filing; a closed one means check whether it was fixed after the reporter's version; an open PR means link it.
-
-## Phase 3 — Impact and dependency scan
+## Phase 5 — Impact and dependency scan
 
 Give the engineer the context they would otherwise spend an hour gathering:
 
@@ -76,13 +111,13 @@ Give the engineer the context they would otherwise spend an hour gathering:
 - **Assumptions to confirm.** Anything a maintainer must settle, such as which convention is authoritative.
 - **Related surfaces.** Docs pages, deprecation timing, or downstream helpers needing the same treatment.
 
-## Phase 4 — Fill the repository's template
+## Phase 6 — Fill the repository's template
 
 Use the real template from `.github/ISSUE_TEMPLATE/`: `bug_report.md` (Describe the bug / To Reproduce / Expected behavior / Screenshots / Environment / Additional context) or `feature_request.md` (problem / solution / alternatives / additional context). Keep its headings verbatim; do not invent your own structure.
 
 Fill every section. "N/A" is acceptable where genuinely not applicable; blank is not. Put the reproducer in a fenced code block, minimized to the fewest lines that still fail, and paste real output rather than describing it.
 
-## Phase 5 — Definition of done and non-goals
+## Phase 7 — Definition of done and non-goals
 
 Add these under **Additional context**. They are what make the issue actionable:
 
@@ -97,7 +132,7 @@ Add these under **Additional context**. They are what make the issue actionable:
 
 Each done item must be checkable by running something. "Boxes and masks agree in orientation, verified by a round-trip test" is testable; "the transforms work correctly" is not. Non-goals prevent the scope creep that stalls review.
 
-## Phase 6 — Preview, then file
+## Phase 8 — Preview, then file
 
 Show the complete issue body to the human as markdown, with the title, proposed labels, and duplicate-search results. Ask for approval and make any edits they want.
 
