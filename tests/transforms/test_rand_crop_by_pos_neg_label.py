@@ -26,7 +26,7 @@ TESTS = [
     [
         {
             "label": np.random.randint(0, 2, size=[3, 3, 3, 3]),
-            "spatial_size": [2, 2, -1],
+            "roi_size": [2, 2, -1],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -39,7 +39,7 @@ TESTS = [
     [
         {
             "label": np.random.randint(0, 2, size=[3, 3, 3, 3]),
-            "spatial_size": [2, 2, 2],
+            "roi_size": [2, 2, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -52,7 +52,7 @@ TESTS = [
     [
         {
             "label": None,
-            "spatial_size": [2, 2, 2],
+            "roi_size": [2, 2, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -69,7 +69,7 @@ TESTS = [
     [
         {
             "label": np.random.randint(0, 2, size=[3, 3, 3, 3]),
-            "spatial_size": [4, 4, 2],
+            "roi_size": [4, 4, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -82,7 +82,7 @@ TESTS = [
     [
         {
             "label": np.random.randint(0, 2, size=[3, 3, 3, 3]),
-            "spatial_size": [4, 4, 4],
+            "roi_size": [4, 4, 4],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -113,7 +113,8 @@ class TestRandCropByPosNegLabel(unittest.TestCase):
             cropper = RandCropByPosNegLabel(**input_param_mod)
             cropper.set_random_state(0)
             result = cropper(**input_data_mod)
-            self.assertListEqual(cropper.spatial_size, input_param["spatial_size"])
+            self.assertEqual(cropper.roi_size, input_param["roi_size"])
+            self.assertEqual(cropper.spatial_size, input_param["roi_size"])
 
             self.assertIsInstance(result, list)
             self.assertTupleEqual(result[0].shape, expected_shape)

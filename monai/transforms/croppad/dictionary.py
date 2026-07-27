@@ -45,12 +45,13 @@ from monai.transforms.croppad.array import (
     ResizeWithPadOrCrop,
     SpatialCrop,
     SpatialPad,
+    _resolve_crop_size,
 )
 from monai.transforms.inverse import InvertibleTransform
 from monai.transforms.traits import LazyTrait, MultiSampleTrait
 from monai.transforms.transform import LazyTransform, MapTransform, Randomizable
 from monai.transforms.utils import is_positive
-from monai.utils import MAX_SEED, Method, PytorchPadMode, TraceKeys, ensure_tuple_rep
+from monai.utils import MAX_SEED, Method, PytorchPadMode, TraceKeys, deprecated_arg, ensure_tuple_rep
 
 __all__ = [
     "Padd",
@@ -615,12 +616,32 @@ class CenterSpatialCropd(Cropd):
             the spatial size of output data will be [32, 40, 40].
         allow_missing_keys: don't raise exception if key is missing.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
-        self, keys: KeysCollection, roi_size: Sequence[int] | int, allow_missing_keys: bool = False, lazy: bool = False
+        self,
+        keys: KeysCollection,
+        roi_size: Sequence[int] | int | None = None,
+        allow_missing_keys: bool = False,
+        lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
-        cropper = CenterSpatialCrop(roi_size, lazy=lazy)
+        cropper = CenterSpatialCrop(_resolve_crop_size(roi_size, spatial_size), lazy=lazy)
         super().__init__(keys, cropper=cropper, allow_missing_keys=allow_missing_keys, lazy=lazy)
 
 
@@ -685,19 +706,37 @@ class RandSpatialCropd(RandCropd):
             `randint(roi_scale * image spatial size, max_roi_scale * image spatial size + 1)`.
         allow_missing_keys: don't raise exception if key is missing.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
         keys: KeysCollection,
-        roi_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         max_roi_size: Sequence[int] | int | None = None,
         random_center: bool = True,
         random_size: bool = False,
         allow_missing_keys: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
-        cropper = RandSpatialCrop(roi_size, max_roi_size, random_center, random_size, lazy=lazy)
+        cropper = RandSpatialCrop(
+            _resolve_crop_size(roi_size, spatial_size), max_roi_size, random_center, random_size, lazy=lazy
+        )
         super().__init__(keys, cropper=cropper, allow_missing_keys=allow_missing_keys, lazy=lazy)
 
 
@@ -778,29 +817,47 @@ class RandSpatialCropSamplesd(Randomizable, MapTransform, LazyTransform, MultiSa
             The actual size is sampled from `randint(roi_size, img_size)`.
         allow_missing_keys: don't raise exception if key is missing.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
     Raises:
         ValueError: When ``num_samples`` is nonpositive.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
     backend = RandSpatialCropSamples.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
         keys: KeysCollection,
-        roi_size: Sequence[int] | int,
-        num_samples: int,
+        roi_size: Sequence[int] | int | None = None,
+        num_samples: int = 1,
         max_roi_size: Sequence[int] | int | None = None,
         random_center: bool = True,
         random_size: bool = False,
         allow_missing_keys: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         MapTransform.__init__(self, keys, allow_missing_keys)
         LazyTransform.__init__(self, lazy)
         self.cropper = RandSpatialCropSamples(
-            roi_size, num_samples, max_roi_size, random_center, random_size, lazy=lazy
+            _resolve_crop_size(roi_size, spatial_size),
+            num_samples,
+            max_roi_size,
+            random_center,
+            random_size,
+            lazy=lazy,
         )
 
     @LazyTransform.lazy.setter  # type: ignore
@@ -948,11 +1005,18 @@ class RandWeightedCropd(Randomizable, MapTransform, LazyTransform, MultiSampleTr
             To obtain the cropped weight map (e.g. to batch it alongside the image), include ``w_key`` in
             ``keys`` so it is cropped with the same sample centers; otherwise it is passed through unchanged
             at its original spatial size.
-        spatial_size: the spatial size of the image patch e.g. [224, 224, 128].
+        roi_size: the spatial size of the image patch e.g. [224, 224, 128].
             If its components have non-positive values, the corresponding size of `img` will be used.
         num_samples: number of samples (image patches) to take in the returned list.
         allow_missing_keys: don't raise exception if key is missing.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     See Also:
         :py:class:`monai.transforms.RandWeightedCrop`
@@ -960,19 +1024,27 @@ class RandWeightedCropd(Randomizable, MapTransform, LazyTransform, MultiSampleTr
 
     backend = SpatialCrop.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
         keys: KeysCollection,
         w_key: str,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         num_samples: int = 1,
         allow_missing_keys: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ):
         MapTransform.__init__(self, keys, allow_missing_keys)
         LazyTransform.__init__(self, lazy)
         self.w_key = w_key
-        self.cropper = RandWeightedCrop(spatial_size, num_samples, lazy=lazy)
+        self.cropper = RandWeightedCrop(_resolve_crop_size(roi_size, spatial_size), num_samples, lazy=lazy)
 
     def set_random_state(
         self, seed: int | None = None, state: np.random.RandomState | None = None
@@ -1029,10 +1101,10 @@ class RandCropByPosNegLabeld(Randomizable, MapTransform, LazyTransform, MultiSam
         keys: keys of the corresponding items to be transformed.
             See also: :py:class:`monai.transforms.compose.MapTransform`
         label_key: name of key for label image, this will be used for finding foreground/background.
-        spatial_size: the spatial size of the crop region e.g. [224, 224, 128].
+        roi_size: the spatial size of the crop region e.g. [224, 224, 128].
             if a dimension of ROI size is larger than image size, will not crop that dimension of the image.
             if its components have non-positive values, the corresponding size of `data[label_key]` will be used.
-            for example: if the spatial size of input data is [40, 40, 40] and `spatial_size=[32, 64, -1]`,
+            for example: if the spatial size of input data is [40, 40, 40] and `roi_size=[32, 64, -1]`,
             the spatial size of output data will be [32, 40, 40].
         pos: used with `neg` together to calculate the ratio ``pos / (pos + neg)`` for the probability
             to pick a foreground voxel as a center rather than a background voxel.
@@ -1056,20 +1128,32 @@ class RandCropByPosNegLabeld(Randomizable, MapTransform, LazyTransform, MultiSam
             match the cropped size (i.e., no cropping in that dimension).
         allow_missing_keys: don't raise exception if key is missing.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
     Raises:
         ValueError: When ``pos`` or ``neg`` are negative.
         ValueError: When ``pos=0`` and ``neg=0``. Incompatible values.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
     backend = RandCropByPosNegLabel.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
         keys: KeysCollection,
         label_key: str,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         pos: float = 1.0,
         neg: float = 1.0,
         num_samples: int = 1,
@@ -1080,6 +1164,7 @@ class RandCropByPosNegLabeld(Randomizable, MapTransform, LazyTransform, MultiSam
         allow_smaller: bool = False,
         allow_missing_keys: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         MapTransform.__init__(self, keys, allow_missing_keys)
         LazyTransform.__init__(self, lazy)
@@ -1088,7 +1173,7 @@ class RandCropByPosNegLabeld(Randomizable, MapTransform, LazyTransform, MultiSam
         self.fg_indices_key = fg_indices_key
         self.bg_indices_key = bg_indices_key
         self.cropper = RandCropByPosNegLabel(
-            spatial_size=spatial_size,
+            roi_size=_resolve_crop_size(roi_size, spatial_size),
             pos=pos,
             neg=neg,
             num_samples=num_samples,
@@ -1155,7 +1240,7 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
         cropper = RandCropByLabelClassesd(
             keys=["image", "label"],
             label_key="label",
-            spatial_size=[3, 3],
+            roi_size=[3, 3],
             ratios=[1, 2, 3, 1],
             num_classes=4,
             num_samples=2,
@@ -1196,10 +1281,10 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
         keys: keys of the corresponding items to be transformed.
             See also: :py:class:`monai.transforms.compose.MapTransform`
         label_key: name of key for label image, this will be used for finding indices of every class.
-        spatial_size: the spatial size of the crop region e.g. [224, 224, 128].
+        roi_size: the spatial size of the crop region e.g. [224, 224, 128].
             if a dimension of ROI size is larger than image size, will not crop that dimension of the image.
             if its components have non-positive values, the corresponding size of `label` will be used.
-            for example: if the spatial size of input data is [40, 40, 40] and `spatial_size=[32, 64, -1]`,
+            for example: if the spatial size of input data is [40, 40, 40] and `roi_size=[32, 64, -1]`,
             the spatial size of output data will be [32, 40, 40].
         ratios: specified ratios of every class in the label to generate crop centers, including background class.
             if None, every class will have the same ratio to generate crop centers.
@@ -1221,15 +1306,30 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
         max_samples_per_class: maximum length of indices in each class to reduce memory consumption.
             Default is None, no subsampling.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     backend = RandCropByLabelClasses.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
         keys: KeysCollection,
         label_key: str,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         ratios: list[float | int] | None = None,
         num_classes: int | None = None,
         num_samples: int = 1,
@@ -1241,6 +1341,7 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
         warn: bool = True,
         max_samples_per_class: int | None = None,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         MapTransform.__init__(self, keys, allow_missing_keys)
         LazyTransform.__init__(self, lazy)
@@ -1248,7 +1349,7 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
         self.image_key = image_key
         self.indices_key = indices_key
         self.cropper = RandCropByLabelClasses(
-            spatial_size=spatial_size,
+            roi_size=_resolve_crop_size(roi_size, spatial_size),
             ratios=ratios,
             num_classes=num_classes,
             num_samples=num_samples,

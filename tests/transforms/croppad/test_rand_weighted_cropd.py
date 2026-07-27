@@ -42,7 +42,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "small roi 2d",
-                dict(keys="img", w_key="w", spatial_size=(10, 12), num_samples=3),
+                dict(keys="img", w_key="w", roi_size=(10, 12), num_samples=3),
                 {"img": p(im), "w": q(weight)},
                 (1, 10, 12),
                 [[80, 21], [30, 17], [40, 31]],
@@ -56,7 +56,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "default roi 2d",
-                dict(keys="img", w_key="w", spatial_size=(10, -1), num_samples=3),
+                dict(keys="img", w_key="w", roi_size=(10, -1), num_samples=3),
                 {"img": p(im), "w": q(weight), "others": np.nan},
                 (1, 10, 64),
                 [[14, 32], [105, 32], [20, 32]],
@@ -69,7 +69,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "large roi 2d",
-                dict(keys=("img", "seg"), w_key="weight", spatial_size=(10000, 400), num_samples=3),
+                dict(keys=("img", "seg"), w_key="weight", roi_size=(10000, 400), num_samples=3),
                 {"img": p(im), "seg": p(SEGN_2D), "weight": q(weight)},
                 (1, 128, 64),
                 [[64, 32], [64, 32], [64, 32]],
@@ -83,7 +83,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "bad w roi 2d",
-                dict(keys=("img", "seg"), w_key="w", spatial_size=(20, 40), num_samples=3),
+                dict(keys=("img", "seg"), w_key="w", roi_size=(20, 40), num_samples=3),
                 {"img": p(im), "seg": p(SEGN_2D), "w": q(weight)},
                 (1, 20, 40),
                 [[63, 37], [31, 43], [66, 20]],
@@ -98,7 +98,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "small roi 3d",
-                dict(keys="img", w_key="w", spatial_size=(8, 10, 12), num_samples=3),
+                dict(keys="img", w_key="w", roi_size=(8, 10, 12), num_samples=3),
                 {"img": p(im), "w": q(weight)},
                 (1, 8, 10, 12),
                 [[11, 23, 21], [5, 30, 17], [8, 40, 31]],
@@ -112,7 +112,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "default roi 3d",
-                dict(keys=("img", "seg"), w_key="w", spatial_size=(10, -1, -1), num_samples=3),
+                dict(keys=("img", "seg"), w_key="w", roi_size=(10, -1, -1), num_samples=3),
                 {"img": p(im), "seg": p(SEGN_3D), "w": q(weight)},
                 (1, 10, 64, 80),
                 [[14, 32, 40], [41, 32, 40], [20, 32, 40]],
@@ -125,7 +125,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "large roi 3d",
-                dict(keys="img", w_key="w", spatial_size=(10000, 400, 80), num_samples=3),
+                dict(keys="img", w_key="w", roi_size=(10000, 400, 80), num_samples=3),
                 {"img": p(im), "w": q(weight)},
                 (1, 48, 64, 80),
                 [[24, 32, 40], [24, 32, 40], [24, 32, 40]],
@@ -139,7 +139,7 @@ for p in TEST_NDARRAYS_ALL:
         TESTS.append(
             [
                 "bad w roi 3d",
-                dict(keys=("img", "seg"), w_key="w", spatial_size=(48, 64, 80), num_samples=3),
+                dict(keys=("img", "seg"), w_key="w", roi_size=(48, 64, 80), num_samples=3),
                 {"img": p(im), "seg": p(SEGN_3D), "w": q(weight)},
                 (1, 48, 64, 80),
                 [[24, 32, 40], [24, 32, 40], [24, 32, 40]],

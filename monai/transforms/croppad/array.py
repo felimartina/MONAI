@@ -51,11 +51,33 @@ from monai.utils import (
     TransformBackends,
     convert_data_type,
     convert_to_tensor,
+    deprecated_arg,
     ensure_tuple,
     ensure_tuple_rep,
     fall_back_tuple,
     look_up_option,
 )
+
+
+def _resolve_crop_size(
+    roi_size: Sequence[int] | int | None, spatial_size: Sequence[int] | int | None
+) -> Sequence[int] | int:
+    """Resolve preferred ``roi_size`` with deprecated ``spatial_size`` alias.
+
+    Raises:
+        ValueError: when neither size is provided, or both are provided with different values.
+    """
+    if roi_size is not None and spatial_size is not None:
+        if ensure_tuple(roi_size) != ensure_tuple(spatial_size):
+            raise ValueError(
+                "Got conflicting `roi_size` and deprecated `spatial_size`; please use only `roi_size`."
+            )
+        return roi_size
+    if roi_size is None:
+        if spatial_size is None:
+            raise ValueError("`roi_size` must be specified (deprecated alias: `spatial_size`).")
+        return spatial_size
+    return roi_size
 
 __all__ = [
     "Pad",
@@ -504,11 +526,31 @@ class CenterSpatialCrop(Crop):
             for example: if the spatial size of input data is [40, 40, 40] and `roi_size=[32, 64, -1]`,
             the spatial size of output data will be [32, 40, 40].
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
-    def __init__(self, roi_size: Sequence[int] | int, lazy: bool = False) -> None:
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
+    def __init__(
+        self,
+        roi_size: Sequence[int] | int | None = None,
+        lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
+    ) -> None:
         super().__init__(lazy=lazy)
-        self.roi_size = roi_size
+        self.roi_size = _resolve_crop_size(roi_size, spatial_size)
 
     def compute_slices(self, spatial_size: Sequence[int]) -> tuple[slice]:  # type: ignore[override]
         roi_size = fall_back_tuple(self.roi_size, spatial_size)
@@ -581,18 +623,34 @@ class RandSpatialCrop(Randomizable, Crop):
         random_size: crop with random size or specific size ROI.
             if True, the actual size is sampled from `randint(roi_size, max_roi_size + 1)`.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
-        roi_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         max_roi_size: Sequence[int] | int | None = None,
         random_center: bool = True,
         random_size: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         super().__init__(lazy)
-        self.roi_size = roi_size
+        self.roi_size = _resolve_crop_size(roi_size, spatial_size)
         self.max_roi_size = max_roi_size
         self.random_center = random_center
         self.random_size = random_size
@@ -719,28 +777,42 @@ class RandSpatialCropSamples(Randomizable, TraceableTransform, LazyTransform, Mu
         random_size: crop with random size or specific size ROI.
             The actual size is sampled from `randint(roi_size, img_size)`.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
     Raises:
         ValueError: When ``num_samples`` is nonpositive.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
     backend = RandSpatialCrop.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
-        roi_size: Sequence[int] | int,
-        num_samples: int,
+        roi_size: Sequence[int] | int | None = None,
+        num_samples: int = 1,
         max_roi_size: Sequence[int] | int | None = None,
         random_center: bool = True,
         random_size: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         LazyTransform.__init__(self, lazy)
         if num_samples < 1:
             raise ValueError(f"num_samples must be positive, got {num_samples}.")
         self.num_samples = num_samples
-        self.cropper = RandSpatialCrop(roi_size, max_roi_size, random_center, random_size, lazy)
+        self.roi_size = _resolve_crop_size(roi_size, spatial_size)
+        self.cropper = RandSpatialCrop(self.roi_size, max_roi_size, random_center, random_size, lazy)
 
     def set_random_state(
         self, seed: int | None = None, state: np.random.RandomState | None = None
@@ -959,7 +1031,7 @@ class RandWeightedCrop(Randomizable, TraceableTransform, LazyTransform, MultiSam
     for more information.
 
     Args:
-        spatial_size: the spatial size of the image patch e.g. [224, 224, 128].
+        roi_size: the spatial size of the image patch e.g. [224, 224, 128].
             If its components have non-positive values, the corresponding size of `img` will be used.
         num_samples: number of samples (image patches) to take in the returned list.
         weight_map: weight map used to generate patch samples. The weights must be non-negative.
@@ -967,19 +1039,36 @@ class RandWeightedCrop(Randomizable, TraceableTransform, LazyTransform, MultiSam
             It should be a single-channel array in shape, for example, `(1, spatial_dim_0, spatial_dim_1, ...)`.
             The weight map is only used to compute the patch sample locations; it is not cropped itself.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     backend = SpatialCrop.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         num_samples: int = 1,
         weight_map: NdarrayOrTensor | None = None,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ):
         LazyTransform.__init__(self, lazy)
-        self.spatial_size = ensure_tuple(spatial_size)
+        self.roi_size = ensure_tuple(_resolve_crop_size(roi_size, spatial_size))
+        self.spatial_size = self.roi_size  # backward-compatible attribute
         self.num_samples = int(num_samples)
         self.weight_map = weight_map
         self.centers: list[np.ndarray] = []
@@ -1062,10 +1151,10 @@ class RandCropByPosNegLabel(Randomizable, TraceableTransform, LazyTransform, Mul
     for more information.
 
     Args:
-        spatial_size: the spatial size of the crop region e.g. [224, 224, 128].
+        roi_size: the spatial size of the crop region e.g. [224, 224, 128].
             if a dimension of ROI size is larger than image size, will not crop that dimension of the image.
             if its components have non-positive values, the corresponding size of `label` will be used.
-            for example: if the spatial size of input data is [40, 40, 40] and `spatial_size=[32, 64, -1]`,
+            for example: if the spatial size of input data is [40, 40, 40] and `roi_size=[32, 64, -1]`,
             the spatial size of output data will be [32, 40, 40].
         label: the label image that is used for finding foreground/background, if None, must set at
             `self.__call__`.  Non-zero indicates foreground, zero indicates background.
@@ -1091,18 +1180,30 @@ class RandCropByPosNegLabel(Randomizable, TraceableTransform, LazyTransform, Mul
             the requested ROI in any dimension. If `True`, any smaller dimensions will be set to
             match the cropped size (i.e., no cropping in that dimension).
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
     Raises:
         ValueError: When ``pos`` or ``neg`` are negative.
         ValueError: When ``pos=0`` and ``neg=0``. Incompatible values.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
     backend = SpatialCrop.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         label: torch.Tensor | None = None,
         pos: float = 1.0,
         neg: float = 1.0,
@@ -1113,9 +1214,11 @@ class RandCropByPosNegLabel(Randomizable, TraceableTransform, LazyTransform, Mul
         bg_indices: NdarrayOrTensor | None = None,
         allow_smaller: bool = False,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         LazyTransform.__init__(self, lazy)
-        self.spatial_size = spatial_size
+        self.roi_size = _resolve_crop_size(roi_size, spatial_size)
+        self.spatial_size = self.roi_size  # backward-compatible attribute
         self.label = label
         if pos < 0 or neg < 0:
             raise ValueError(f"pos and neg must be nonnegative, got pos={pos} neg={neg}.")
@@ -1239,7 +1342,7 @@ class RandCropByLabelClasses(Randomizable, TraceableTransform, LazyTransform, Mu
             [0, 0, 0, 0, 0]]
         ])
         cropper = RandCropByLabelClasses(
-            spatial_size=[3, 3],
+            roi_size=[3, 3],
             ratios=[1, 2, 3, 1],
             num_classes=4,
             num_samples=2,
@@ -1261,10 +1364,10 @@ class RandCropByLabelClasses(Randomizable, TraceableTransform, LazyTransform, Mu
     for more information.
 
     Args:
-        spatial_size: the spatial size of the crop region e.g. [224, 224, 128].
+        roi_size: the spatial size of the crop region e.g. [224, 224, 128].
             if a dimension of ROI size is larger than image size, will not crop that dimension of the image.
             if its components have non-positive values, the corresponding size of `label` will be used.
-            for example: if the spatial size of input data is [40, 40, 40] and `spatial_size=[32, 64, -1]`,
+            for example: if the spatial size of input data is [40, 40, 40] and `roi_size=[32, 64, -1]`,
             the spatial size of output data will be [32, 40, 40].
         ratios: specified ratios of every class in the label to generate crop centers, including background class.
             if None, every class will have the same ratio to generate crop centers.
@@ -1286,13 +1389,28 @@ class RandCropByLabelClasses(Randomizable, TraceableTransform, LazyTransform, Mu
         max_samples_per_class: maximum length of indices to sample in each class to reduce memory consumption.
             Default is None, no subsampling.
         lazy: a flag to indicate whether this transform should execute lazily or not. Defaults to False.
+        spatial_size: deprecated alias of ``roi_size``.
+
+            .. deprecated:: 1.7
+                Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     backend = SpatialCrop.backend
 
+    @deprecated_arg(
+        "spatial_size",
+        since="1.7",
+        removed="1.9",
+        msg_suffix="please use `roi_size` instead.",
+        new_name="roi_size",
+    )
     def __init__(
         self,
-        spatial_size: Sequence[int] | int,
+        roi_size: Sequence[int] | int | None = None,
         ratios: list[float | int] | None = None,
         label: torch.Tensor | None = None,
         num_classes: int | None = None,
@@ -1304,9 +1422,11 @@ class RandCropByLabelClasses(Randomizable, TraceableTransform, LazyTransform, Mu
         warn: bool = True,
         max_samples_per_class: int | None = None,
         lazy: bool = False,
+        spatial_size: Sequence[int] | int | None = None,
     ) -> None:
         LazyTransform.__init__(self, lazy)
-        self.spatial_size = spatial_size
+        self.roi_size = _resolve_crop_size(roi_size, spatial_size)
+        self.spatial_size = self.roi_size  # backward-compatible attribute
         self.ratios = ratios
         self.label = label
         self.num_classes = num_classes

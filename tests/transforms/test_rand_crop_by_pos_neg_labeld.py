@@ -27,7 +27,7 @@ TESTS = [
         {
             "keys": ["image", "extra", "label"],
             "label_key": "label",
-            "spatial_size": [-1, 2, 2],
+            "roi_size": [-1, 2, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -45,7 +45,7 @@ TESTS = [
         {
             "keys": ["image", "extra", "label"],
             "label_key": "label",
-            "spatial_size": [2, 2, 2],
+            "roi_size": [2, 2, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -63,7 +63,7 @@ TESTS = [
         {
             "keys": ["image", "extra", "label"],
             "label_key": "label",
-            "spatial_size": [2, 2, 2],
+            "roi_size": [2, 2, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -77,7 +77,7 @@ TESTS = [
         {
             "keys": ["image", "extra", "label"],
             "label_key": "label",
-            "spatial_size": [4, 4, 2],
+            "roi_size": [4, 4, 2],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -92,7 +92,7 @@ TESTS = [
         {
             "keys": ["image", "extra", "label"],
             "label_key": "label",
-            "spatial_size": [4, 4, 4],
+            "roi_size": [4, 4, 4],
             "pos": 1,
             "neg": 1,
             "num_samples": 2,
@@ -123,7 +123,8 @@ class TestRandCropByPosNegLabeld(unittest.TestCase):
             cropper = RandCropByPosNegLabeld(**input_param_mod)
             cropper.set_random_state(0)
             result = cropper(input_data_mod)
-            self.assertListEqual(cropper.cropper.spatial_size, input_param["spatial_size"])
+            self.assertEqual(cropper.cropper.roi_size, input_param["roi_size"])
+            self.assertEqual(cropper.cropper.spatial_size, input_param["roi_size"])
 
             self.assertIsInstance(result, list)
 
@@ -135,7 +136,7 @@ class TestRandCropByPosNegLabeld(unittest.TestCase):
                     self.assertEqual(item[k].meta["patch_index"], i)
 
     def test_correct_center(self):
-        cropper = RandCropByPosNegLabeld(keys="label", label_key="label", spatial_size=[3, 3])
+        cropper = RandCropByPosNegLabeld(keys="label", label_key="label", roi_size=[3, 3])
         cropper.set_random_state(0)
         test_image = {"label": np.asarray([[[1, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 1]]])}
         result = cropper(test_image)

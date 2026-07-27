@@ -29,7 +29,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "label": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
                 "num_classes": None,
-                "spatial_size": [2, 2, -1],
+                "roi_size": [2, 2, -1],
                 "ratios": [1, 1, 1],
                 "num_samples": 2,
                 "image": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
@@ -47,7 +47,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "label": p(np.random.randint(0, 2, size=[1, 3, 3, 3])),
                 "num_classes": 2,
-                "spatial_size": [2, 2, 2],
+                "roi_size": [2, 2, 2],
                 "ratios": [1, 1],
                 "num_samples": 2,
                 "image": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
@@ -65,7 +65,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "label": None,
                 "num_classes": 2,
-                "spatial_size": [2, 2, 2],
+                "roi_size": [2, 2, 2],
                 "ratios": [1, 1],
                 "num_samples": 2,
                 "image": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
@@ -86,7 +86,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "label": None,
                 "num_classes": 2,
-                "spatial_size": [4, 4, 2],
+                "roi_size": [4, 4, 2],
                 "ratios": [1, 1],
                 "num_samples": 2,
                 "image": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
@@ -108,7 +108,7 @@ for p in TEST_NDARRAYS_ALL:
             {
                 "label": None,
                 "num_classes": 2,
-                "spatial_size": [4, 4, 4],
+                "roi_size": [4, 4, 4],
                 "ratios": (1, 1),  # test no assignment
                 "num_samples": 2,
                 "image": p(np.random.randint(0, 2, size=[3, 3, 3, 3])),
