@@ -62,7 +62,10 @@ PATH_KEYS = {
     "filePath",
     "target_file",
     "targetFile",
+    "target_notebook",
+    "targetNotebook",
     "file",
+    "filename",
     "abs_path",
     "absolutePath",
     "paths",
@@ -177,11 +180,27 @@ def main() -> None:
 
     raw_paths: list[str] = []
     collect_paths(payload, raw_paths)
+    # Matcher covers write/edit/delete tools only. If no path key matched, refuse
+    # rather than failing open on an unrecognized payload shape.
+    resolved = [raw for raw in raw_paths if raw]
+    if not resolved:
+        emit(
+            {
+                "permission": "deny",
+                "agent_message": (
+                    "Blocked: governance hook could not find a target path in the write tool "
+                    "payload (unknown or missing path keys). Refusing the write (fail-closed). "
+                    "Ask a human if the tool payload shape needs to be recognized in "
+                    ".cursor/hooks/protect-platform-paths.py."
+                ),
+                "user_message": (
+                    "Governance hook denied a write because no target path was found in the payload."
+                ),
+            }
+        )
 
     asked: list[str] = []
-    for raw in raw_paths:
-        if not raw:
-            continue
+    for raw in resolved:
         rel = to_relative(raw, root)
         verdict = classify(rel, tool_name)
         if verdict == "deny":
