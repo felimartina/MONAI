@@ -50,7 +50,9 @@ class TestPatchDataset(unittest.TestCase):
         images = [np.arange(16, dtype=float).reshape(1, 4, 4), np.arange(16, dtype=float).reshape(1, 4, 4)]
         # image patch sampler
         n_samples = 8
-        sampler = RandSpatialCropSamples(roi_size=(3, 3), num_samples=n_samples, random_center=True, random_size=False)
+        sampler = RandSpatialCropSamples(
+            spatial_size=(3, 3), num_samples=n_samples, random_center=True, random_size=False
+        )
 
         # image level
         patch_intensity = RandShiftIntensity(offsets=1.0, prob=1.0)

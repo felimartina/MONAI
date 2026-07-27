@@ -33,7 +33,7 @@ TEST_2D = [
             (mt.Spacing, {"pixdim": (1.2, 1.5), "padding_mode": "zeros", "dtype": torch.float32}),
             (mt.Orientation, {"axcodes": "RA"}),
             (mt.Resize, {"spatial_size": (64, 48), "mode": "bilinear"}),
-            (mt.RandSpatialCrop, {"roi_size": (32, 32)}),
+            (mt.RandSpatialCrop, {"spatial_size": (32, 32)}),
             (
                 mt.RandAffine,
                 {
@@ -97,7 +97,7 @@ TEST_3D = [
                 },
             ),
             (mt.Spacing, {"pixdim": (0.9, 1.2, 1.0), "padding_mode": "zeros", "dtype": torch.float32}),
-            (mt.RandSpatialCrop, {"roi_size": (36, 36, 38), "random_size": False}),
+            (mt.RandSpatialCrop, {"spatial_size": (36, 36, 38), "random_size": False}),
             (mt.RandZoom, {"prob": 0.9, "mode": "nearest", "keep_size": False}),
             (mt.Resize, {"spatial_size": (32, 32, 32), "mode": "nearest"}),
             (mt.RandFlip, {"prob": 0.9}),

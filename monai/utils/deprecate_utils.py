@@ -136,6 +136,7 @@ def deprecated_arg(
     a `warning_category` is issued if `since` is given and the current version is at or later than that given.
     a `DeprecatedError` exception is instead raised if `removed` is given and the current version is at or later
     than that, or if neither `since` nor `removed` is provided.
+    If `new_name` is specified, the deprecated argument is replaced even before `since`, without issuing a warning.
 
     The relevant docstring of the deprecating function should also be updated accordingly,
     using the Sphinx directives such as `.. versionchanged:: version` and `.. deprecated:: version`.
@@ -163,8 +164,8 @@ def deprecated_arg(
     if since is not None and removed is not None and not version_leq(since, removed):
         raise ValueError(f"since must be less or equal to removed, got since={since}, removed={removed}.")
     is_not_yet_deprecated = since is not None and version_val != since and version_leq(version_val, since)
-    if is_not_yet_deprecated:
-        # smaller than `since`, do nothing
+    if is_not_yet_deprecated and new_name is None:
+        # smaller than `since`, do nothing unless the argument needs to be renamed
         return lambda obj: obj
     if since is None and removed is None:
         # raise a DeprecatedError directly
@@ -172,7 +173,7 @@ def deprecated_arg(
         is_deprecated = True
     else:
         # compare the numbers
-        is_deprecated = since is not None and version_leq(since, version_val)
+        is_deprecated = not is_not_yet_deprecated and since is not None and version_leq(since, version_val)
         is_removed = removed is not None and version_val != f"{sys.maxsize}" and version_leq(removed, version_val)
 
     def _decorator(func):
@@ -192,20 +193,40 @@ def deprecated_arg(
         msg = f"{msg_prefix} {msg_infix} {msg_suffix}".strip()
 
         sig = inspect.signature(func)
+        positional_params = [
+            pname
+            for pname, param in sig.parameters.items()
+            if param.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
 
         @wraps(func)
         def _wrapper(*args, **kwargs):
-            if new_name is not None and name in kwargs and new_name not in kwargs:
+            # Only treat the deprecated name as used when the caller provided it explicitly.
+            # ``Signature.bind`` does not apply defaults (``apply_defaults`` would), but we
+            # still decide from the original call shape so a defaulted keyword-only alias
+            # like ``*, roi_size=None`` can never be mistaken for an explicit ``roi_size``.
+            deprecated_as_kwarg = name in kwargs
+            deprecated_positional = (not deprecated_as_kwarg) and name in positional_params[: len(args)]
+
+            if new_name is not None and deprecated_as_kwarg and new_name not in kwargs:
                 # replace the deprecated arg "name" with "new_name"
                 # if name is specified and new_name is not specified
                 kwargs[new_name] = kwargs[name]
                 try:
                     _ = sig.bind(*args, **kwargs).arguments
-                except TypeError:
-                    # multiple values for new_name using both args and kwargs
-                    kwargs.pop(new_name, None)
-            binding = sig.bind(*args, **kwargs).arguments
-            positional_found = name in binding
+                except TypeError as err:
+                    # Undo remap only on a true positional/keyword clash for new_name.
+                    # Other TypeErrors (e.g. another required arg still awaiting remap by a
+                    # stacked deprecated_arg wrapper) must keep the replacement.
+                    if "multiple values" in str(err):
+                        kwargs.pop(new_name, None)
+
+            # Prefer a full bind, but fall back to partial when stacked wrappers still need
+            # to remap other required names before the original callable is reached.
+            try:
+                binding = sig.bind(*args, **kwargs).arguments
+            except TypeError:
+                binding = sig.bind_partial(*args, **kwargs).arguments
             kw_found = False
             for k, param in sig.parameters.items():
                 if param.kind == inspect.Parameter.VAR_KEYWORD and k in binding and name in binding[k]:
@@ -213,7 +234,7 @@ def deprecated_arg(
                     # if the deprecated arg is found in the **kwargs, it should be removed
                     kwargs.pop(name, None)
 
-            if positional_found or kw_found:
+            if deprecated_as_kwarg or deprecated_positional or kw_found:
                 if is_removed:
                     raise DeprecatedError(msg)
                 if is_deprecated:
