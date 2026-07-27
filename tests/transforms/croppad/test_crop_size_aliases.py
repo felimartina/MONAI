@@ -141,6 +141,10 @@ class TestCropSizeAliases(unittest.TestCase):
             CenterSpatialCrop(roi_size=[2, 2], spatial_size=[3, 3])
         with self.assertRaises(ValueError):
             RandCropByPosNegLabel(roi_size=[2, 2], spatial_size=[3, 3])
+        with self.assertRaises(ValueError):
+            RandWeightedCrop(roi_size=[2, 2], spatial_size=[3, 3])
+        with self.assertRaises(ValueError):
+            RandCropByPosNegLabeld(keys="img", label_key="label", roi_size=[2, 2], spatial_size=[3, 3])
 
 
 if __name__ == "__main__":

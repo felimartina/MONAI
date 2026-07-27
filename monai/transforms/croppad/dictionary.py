@@ -621,6 +621,9 @@ class CenterSpatialCropd(Cropd):
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     """
 
     @deprecated_arg(
@@ -707,6 +710,9 @@ class RandSpatialCropd(RandCropd):
 
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -818,6 +824,7 @@ class RandSpatialCropSamplesd(Randomizable, MapTransform, LazyTransform, MultiSa
 
     Raises:
         ValueError: When ``num_samples`` is nonpositive.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -1008,6 +1015,9 @@ class RandWeightedCropd(Randomizable, MapTransform, LazyTransform, MultiSampleTr
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
 
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
+
     See Also:
         :py:class:`monai.transforms.RandWeightedCrop`
     """
@@ -1126,6 +1136,7 @@ class RandCropByPosNegLabeld(Randomizable, MapTransform, LazyTransform, MultiSam
     Raises:
         ValueError: When ``pos`` or ``neg`` are negative.
         ValueError: When ``pos=0`` and ``neg=0``. Incompatible values.
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
@@ -1299,6 +1310,9 @@ class RandCropByLabelClassesd(Randomizable, MapTransform, LazyTransform, MultiSa
 
             .. deprecated:: 1.7
                 Use ``roi_size`` instead. ``spatial_size`` will be removed in 1.9.
+
+    Raises:
+        ValueError: when neither ``roi_size`` nor ``spatial_size`` is provided, or both differ.
 
     """
 
