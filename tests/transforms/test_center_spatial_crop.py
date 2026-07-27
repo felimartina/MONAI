@@ -57,6 +57,14 @@ class TestCenterSpatialCrop(CropTest):
         self.assertEqual(cropper.spatial_size, [2, 2, 2])
         self.assertFalse(hasattr(cropper, "roi_size"))
 
+    def test_deprecated_roi_size_with_explicit_none_spatial_size(self):
+        """``deprecated_arg`` does not remap when ``spatial_size`` is explicitly None."""
+        with self.assertWarns(FutureWarning):
+            cropper = CenterSpatialCrop(spatial_size=None, roi_size=[2, 2, 2])
+        self.assertEqual(cropper.spatial_size, [2, 2, 2])
+        img = np.zeros((1, 5, 5, 5))
+        self.assertEqual(tuple(cropper(img).shape), (1, 2, 2, 2))
+
 
 if __name__ == "__main__":
     unittest.main()

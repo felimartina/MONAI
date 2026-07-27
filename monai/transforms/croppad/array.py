@@ -534,10 +534,15 @@ class CenterSpatialCrop(Crop):
     )
     def __init__(
         self,
-        spatial_size: Sequence[int] | int,
+        spatial_size: Sequence[int] | int | None = None,
         lazy: bool = False,
         roi_size: Sequence[int] | int | None = None,
     ) -> None:
+        # Defaults are None so ``deprecated_arg`` remaps can bind before validation.
+        if spatial_size is None:
+            spatial_size = roi_size
+        if spatial_size is None:
+            raise ValueError("`spatial_size` must be provided.")
         super().__init__(lazy=lazy)
         self.spatial_size = spatial_size
 
