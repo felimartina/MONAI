@@ -882,7 +882,7 @@ class BoxToMaskd(MapTransform):
                         prob=0.2,range_x=np.pi/6,range_y=np.pi/6,range_z=np.pi/6,
                         keep_size=True,padding_mode="zeros"
                     ),
-                    RandSpatialCropd(keys=["image","box_mask"],roi_size=128, random_size=False),
+                    RandSpatialCropd(keys=["image","box_mask"], spatial_size=128, random_size=False),
                     MaskToBoxd(
                         box_mask_keys="box_mask", box_keys="boxes",
                         label_keys="labels", min_fg_label=0
@@ -965,7 +965,7 @@ class MaskToBoxd(MapTransform):
                         prob=0.2,range_x=np.pi/6,range_y=np.pi/6,range_z=np.pi/6,
                         keep_size=True,padding_mode="zeros"
                     ),
-                    RandSpatialCropd(keys=["image","box_mask"],roi_size=128, random_size=False),
+                    RandSpatialCropd(keys=["image","box_mask"], spatial_size=128, random_size=False),
                     MaskToBoxd(
                         box_mask_keys="box_mask", box_keys="boxes",
                         label_keys="labels", min_fg_label=0

@@ -72,7 +72,7 @@ class TestMatshow3d(unittest.TestCase):
                 LoadImaged(keys=keys),
                 EnsureChannelFirstd(keys=keys),
                 ScaleIntensityd(keys=keys),
-                RandSpatialCropSamplesd(keys=keys, roi_size=(8, 8, 5), random_size=True, num_samples=10),
+                RandSpatialCropSamplesd(keys=keys, spatial_size=(8, 8, 5), random_size=True, num_samples=10),
             ]
         )
         image_path = os.path.join(testing_dir, "anatomical.nii")
